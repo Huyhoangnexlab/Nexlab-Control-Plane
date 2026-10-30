@@ -1,0 +1,41 @@
+# Postgres local cho Control Plane. Chạy:  docker compose up -d
+# Cổng 5433 (tránh đụng Postgres có sẵn trên máy). Dữ liệu nằm trong volume `cp_pgdata`.
+# Thông tin bên dưới chỉ là khoá DEV cục bộ — production lấy từ Secret Manager, không dùng lại.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexlab-cp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexlab
+      POSTGRES_PASSWORD: nexlab_dev
+      POSTGRES_DB: nexlab_cp
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - cp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexlab -d nexlab_cp"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Keycloak (IdP) local: mỗi tenant một realm, import từ keycloak/realms/*.json (sinh bằng `npm run keycloak:gen`).
+  # Console quản trị: http://localhost:8081  (tài khoản bootstrap bên dưới — chỉ dev).
+  # Không gắn volume dữ liệu: dữ liệu Keycloak dev luôn được import lại từ JSON khi tạo container (xoá container = về trạng thái mẫu).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: nexlab-cp-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin_dev
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import:ro
+
+volumes:
+  cp_pgdata:

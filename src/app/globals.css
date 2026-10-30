@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --color-ink-950: #0a0d1e;
+  --color-ink-900: #10142a;
+  --color-ink-800: #1a1f3d;
+  --color-ink-700: #272d52;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 6px 20px -8px rgb(15 23 42 / 0.10);
+  --shadow-pop: 0 24px 60px -12px rgb(15 23 42 / 0.35);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: #f6f7fb;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
+}
+
+dialog::backdrop {
+  background: rgb(10 13 30 / 0.5);
+  backdrop-filter: blur(3px);
+}
+
+dialog[open] {
+  animation: cp-pop 0.16s ease-out;
+}
+
+@keyframes cp-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cp-toast {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog[open],
+  .cp-toast {
+    animation: none;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.cp-scroll::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.cp-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+/* ───────── Nội dung tài liệu (trang Hướng dẫn) ───────── */
+.doc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #334155;
+}
+.doc h1 {
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  margin-bottom: 1rem;
+  line-height: 1.25;
+}
+.doc h2 {
+  font-size: 1.3rem;
+  font-weight: 650;
+  color: #0f172a;
+  margin: 2.4rem 0 0.9rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid #e2e8f0;
+  scroll-margin-top: 1.5rem;
+}
+.doc h3 {
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: #1e293b;
+  margin: 1.8rem 0 0.6rem;
+  scroll-margin-top: 1.5rem;
+}
+.doc h4 {
+  font-weight: 650;
+  color: #1e293b;
+  margin: 1.2rem 0 0.4rem;
+}
+.doc p {
+  margin: 0.75rem 0;
+}
+.doc a {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-decoration-color: #c7d2fe;
+  text-underline-offset: 3px;
+}
+.doc a:hover {
+  text-decoration-color: #4f46e5;
+}
+.doc ul,
+.doc ol {
+  margin: 0.75rem 0;
+  padding-left: 1.4rem;
+}
+.doc ul {
+  list-style: disc;
+}
+.doc ol {
+  list-style: decimal;
+}
+.doc li {
+  margin: 0.3rem 0;
+}
+.doc li > ul,
+.doc li > ol {
+  margin: 0.3rem 0;
+}
+.doc code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.86em;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.12em 0.4em;
+  border-radius: 6px;
+}
+.doc pre {
+  background: #0f1226;
+  color: #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.doc pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+.doc blockquote {
+  margin: 1.1rem 0;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid #818cf8;
+  background: #eef2ff;
+  border-radius: 0 10px 10px 0;
+  color: #3730a3;
+}
+.doc blockquote p {
+  margin: 0.3rem 0;
+}
+.doc hr {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 2rem 0;
+}
+.doc table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 1.1rem 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+.doc th {
+  background: #f8fafc;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.doc td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+.doc tr:last-child td {
+  border-bottom: 0;
+}
+.doc .doc-ref {
+  background: #fef3c7;
+  color: #78350f;
+}
+.doc strong {
+  color: #0f172a;
+}

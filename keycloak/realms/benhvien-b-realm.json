@@ -1,0 +1,105 @@
+{
+  "realm": "benhvien-b",
+  "displayName": "Bệnh viện Demo B",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "groups": [
+    {
+      "name": "khoa-noi"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "nexlab-hub",
+      "name": "Nexlab Hub",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:*",
+        "http://localhost:*"
+      ],
+      "webOrigins": [],
+      "fullScopeAllowed": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@benhvien-b.test",
+      "email": "admin@benhvien-b.test",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Quản",
+      "lastName": "trị BV Demo B",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": []
+    },
+    {
+      "username": "bacsi@benhvien-b.test",
+      "email": "bacsi@benhvien-b.test",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Bác",
+      "lastName": "sĩ Demo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/khoa-noi"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "nexlab-control-plane",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nexlab Control Plane — quản lý tenant, phòng ban, danh mục app và quyền truy cập cho Hub (chạy local trước, lên GCP sau)",
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "build": "next build",
+    "start": "next start -p 4000",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset": "tsx scripts/reset.ts",
+    "keycloak:gen": "tsx scripts/gen-keycloak-realms.ts",
+    "hub:login": "tsx scripts/hub-login.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "jose": "^6.2.14",
+    "lucide-react": "^1.31.0",
+    "marked": "^18.1.2",
+    "next": "16.3.0",
+    "pg": "^8.23.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "tsx": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  }
+}

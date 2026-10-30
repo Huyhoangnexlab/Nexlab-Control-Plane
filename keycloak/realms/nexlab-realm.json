@@ -1,0 +1,261 @@
+{
+  "realm": "nexlab",
+  "displayName": "Nexlab",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "groups": [
+    {
+      "name": "nhan-su"
+    },
+    {
+      "name": "ke-toan"
+    },
+    {
+      "name": "kinh-doanh"
+    },
+    {
+      "name": "cntt"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "nexlab-hub",
+      "name": "Nexlab Hub",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:*",
+        "http://localhost:*"
+      ],
+      "webOrigins": [],
+      "fullScopeAllowed": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@nexlab.tech",
+      "email": "admin@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Quản",
+      "lastName": "trị Nexlab",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/cntt"
+      ]
+    },
+    {
+      "username": "truongphong.nhansu@nexlab.tech",
+      "email": "truongphong.nhansu@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Lê",
+      "lastName": "Thị Hoa",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/nhan-su"
+      ]
+    },
+    {
+      "username": "truongphong.ketoan@nexlab.tech",
+      "email": "truongphong.ketoan@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Phạm",
+      "lastName": "Văn Đức",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/ke-toan"
+      ]
+    },
+    {
+      "username": "truongphong.kinhdoanh@nexlab.tech",
+      "email": "truongphong.kinhdoanh@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Trần",
+      "lastName": "Minh Quân",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/kinh-doanh"
+      ]
+    },
+    {
+      "username": "nv.nhansu@nexlab.tech",
+      "email": "nv.nhansu@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Nguyễn",
+      "lastName": "Thu Hà",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/nhan-su"
+      ]
+    },
+    {
+      "username": "nv.ketoan@nexlab.tech",
+      "email": "nv.ketoan@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Võ",
+      "lastName": "Thanh Tùng",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/ke-toan"
+      ]
+    },
+    {
+      "username": "nv.kinhdoanh@nexlab.tech",
+      "email": "nv.kinhdoanh@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Đặng",
+      "lastName": "Khánh Linh",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/kinh-doanh"
+      ]
+    },
+    {
+      "username": "kiemnhiem@nexlab.tech",
+      "email": "kiemnhiem@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Bùi",
+      "lastName": "Gia Bảo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/kinh-doanh",
+        "/cntt"
+      ]
+    },
+    {
+      "username": "khach.xem@nexlab.tech",
+      "email": "khach.xem@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Khách",
+      "lastName": "chỉ xem",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/kinh-doanh"
+      ]
+    },
+    {
+      "username": "nguoimoi@nexlab.tech",
+      "email": "nguoimoi@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Hoàng",
+      "lastName": "Người Mới",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/kinh-doanh"
+      ]
+    }
+  ]
+}
