@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-export type IdPrefix = "ten" | "usr" | "dep" | "app";
+export type IdPrefix = "ten" | "usr" | "dep" | "app" | "req";
 
 /** Id có tiền tố loại đối tượng, ví dụ `usr_3f9a1c0b7d2e4a55`. Không đoán được, không lộ thứ tự tạo. */
 export function newId(prefix: IdPrefix): string {

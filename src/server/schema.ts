@@ -261,4 +261,25 @@ CREATE TABLE tenant_secrets (
 );
 `,
   },
+  {
+    version: 6,
+    name: "yeu-cau-quyen",
+    sql: `
+-- Yêu cầu quyền do nhân viên gửi từ Hub («Xin quyền»): chỉ là thông báo cho quản trị / trưởng phòng, KHÔNG tự cấp quyền.
+CREATE TABLE access_requests (
+  id            text PRIMARY KEY,
+  tenant_id     text NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id       text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  app_id        text REFERENCES catalog_apps(id) ON DELETE SET NULL,
+  message       text NOT NULL DEFAULT '',
+  status        text NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved','declined')),
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  resolved_by   text REFERENCES users(id) ON DELETE SET NULL,
+  resolved_at   timestamptz,
+  resolved_note text NOT NULL DEFAULT ''
+);
+CREATE INDEX access_requests_tenant_idx ON access_requests (tenant_id, status, created_at DESC);
+CREATE INDEX access_requests_user_idx ON access_requests (user_id, status);
+`,
+  },
 ];
