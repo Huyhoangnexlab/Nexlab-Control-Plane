@@ -103,9 +103,23 @@ async function migrate(): Promise<void> {
   }
 }
 
+/**
+ * Production không được mang cấu hình dev: các cờ dưới đây mở cửa sau (đăng nhập nhanh, origin localhost, token Hub bằng mật khẩu
+ * cục bộ). Phát hiện là TỪ CHỐI chạy (fail-closed), không chỉ cảnh báo.
+ */
+export function assertProductionConfig(env: NodeJS.ProcessEnv = process.env): void {
+  if (env.NODE_ENV !== "production") return;
+  const bad = ["CP_DEV_LOGIN", "CP_ALLOW_DEV_ORIGINS", "CP_LOCAL_HUB_TOKENS"].filter((k) => env[k] === "1");
+  if (bad.length > 0) throw new Error(`Production: không được bật cờ dev ${bad.join(", ")}.`);
+  if (!env.CP_SIGNING_KEY_PEM) throw new Error("Production: thiếu CP_SIGNING_KEY_PEM.");
+  if (!env.DATABASE_URL) throw new Error("Production: thiếu DATABASE_URL.");
+  if (!env.CP_SECRETS_KEY) throw new Error("Production: thiếu CP_SECRETS_KEY (khoá mã hoá bí mật của tổ chức).");
+}
+
 /** Chạy migration (và seed nếu bật CP_AUTO_SEED) đúng một lần cho mỗi tiến trình. */
 export function ready(): Promise<void> {
   if (!g.__cpReady) {
+    assertProductionConfig(); // chỉ ở lần khởi tạo đầu của tiến trình
     g.__cpReady = migrate().catch((e) => {
       g.__cpReady = undefined; // cho phép thử lại (vd. Postgres chưa kịp lên)
       throw e;

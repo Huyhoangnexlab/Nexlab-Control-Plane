@@ -1,0 +1,73 @@
+# Demo / pilot trên MỘT VM (Compute Engine): Caddy (HTTPS tự động) + Control Plane + Postgres + Keycloak.
+# Chạy trong thư mục chứa file này, cùng thư mục có `.env` (xem .env.example, quyền 600, KHÔNG commit):  docker compose up -d
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      CP_HOST: ${CP_HOST}
+      KC_HOST: ${KC_HOST}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [control-plane, keycloak]
+
+  control-plane:
+    image: nexlab-control-plane:demo
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://nexlab:${PG_PASSWORD}@postgres:5432/nexlab_cp
+      CP_SIGNING_KEY_PEM: ${CP_SIGNING_KEY_PEM}
+      CP_SECRETS_KEY: ${CP_SECRETS_KEY}            # khoá mã hoá khoá API / token của tổ chức (32 byte base64)
+      CP_AUTO_SEED: "1"            # server DEMO: nạp dữ liệu mẫu khi DB trống (mật khẩu mẫu = CP_SEED_PASSWORD ngẫu nhiên)
+      CP_SEED_PASSWORD: ${CP_SEED_PASSWORD}
+      KEYCLOAK_URL: https://${KC_HOST}
+    depends_on:
+      postgres: { condition: service_healthy }
+    expose: ["3000"]
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexlab
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: nexlab_cp
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-keycloak-db.sh:/docker-entrypoint-initdb.d/10-keycloak.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexlab -d nexlab_cp"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    restart: unless-stopped
+    command: start --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_HOSTNAME: https://${KC_HOST}
+      KC_HTTP_ENABLED: "true"        # TLS kết thúc ở Caddy
+      KC_PROXY_HEADERS: xforwarded
+      KC_BOOTSTRAP_ADMIN_USERNAME: kcadmin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      JAVA_OPTS_KC_HEAP: "-Xms192m -Xmx640m"
+    volumes:
+      - ./realms:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+    expose: ["8080"]
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

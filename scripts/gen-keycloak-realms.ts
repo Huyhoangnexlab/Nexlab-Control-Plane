@@ -9,7 +9,11 @@ import { DEV_PASSWORD, HUB_CLIENT_ID, KEYCLOAK_REALMS } from "../src/server/seed
  * CẢNH BÁO: file sinh ra chứa mật khẩu mẫu của người dùng dev và bật Direct Access Grants (đăng nhập bằng mật khẩu
  * qua API — chỉ để chạy test tự động). KHÔNG dùng cấu hình này ở production.
  */
-const outDir = path.join(process.cwd(), "keycloak", "realms");
+// CP_KEYCLOAK_OUT = thư mục xuất khác (demo trên server); CP_KEYCLOAK_PROD=1 = bật SSL bắt buộc từ ngoài và TẮT Direct Access Grants
+// (đăng nhập bằng mật khẩu qua API). Server công khai PHẢI đặt CP_SEED_PASSWORD ngẫu nhiên — không dùng mật khẩu mẫu.
+const prod = process.env.CP_KEYCLOAK_PROD === "1";
+if (prod && DEV_PASSWORD === "Nexlab@2026") throw new Error("CP_KEYCLOAK_PROD=1 cần CP_SEED_PASSWORD khác mật khẩu mẫu mặc định.");
+const outDir = process.env.CP_KEYCLOAK_OUT ? path.resolve(process.env.CP_KEYCLOAK_OUT) : path.join(process.cwd(), "keycloak", "realms");
 mkdirSync(outDir, { recursive: true });
 
 for (const r of KEYCLOAK_REALMS) {
@@ -17,7 +21,7 @@ for (const r of KEYCLOAK_REALMS) {
     realm: r.realm,
     displayName: r.displayName,
     enabled: true,
-    sslRequired: "none", // dev: http://localhost
+    sslRequired: prod ? "external" : "none", // dev: http://localhost
     registrationAllowed: false,
     registrationEmailAsUsername: true,
     loginWithEmailAllowed: true,
@@ -38,7 +42,7 @@ for (const r of KEYCLOAK_REALMS) {
         publicClient: true,
         standardFlowEnabled: true,
         implicitFlowEnabled: false,
-        directAccessGrantsEnabled: true, // chỉ dev/test
+        directAccessGrantsEnabled: !prod, // chỉ dev/test
         serviceAccountsEnabled: false,
         // RFC 8252: app cài trên máy dùng redirect loopback (cổng ngẫu nhiên). Keycloak chỉ cho wildcard ở cuối URI.
         redirectUris: ["http://127.0.0.1:*", "http://localhost:*"],

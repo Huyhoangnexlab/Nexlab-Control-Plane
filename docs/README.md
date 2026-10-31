@@ -13,6 +13,7 @@ Bộ tài liệu này là nguồn sự thật cho **ai được làm gì** trong
 | 7 | [Lộ trình & giới hạn đã biết](07-lo-trinh-va-gioi-han.md) | Biết cái gì chưa làm, rủi ro, bước kế tiếp |
 | 8 | [API cho Hub & gói quyền ký](08-api-cho-hub.md) | Nối Hub vào: discover, token, entitlements, cách kiểm chữ ký Ed25519 |
 | 9 | [Đăng nhập SSO (OIDC) với Keycloak](09-dang-nhap-sso-keycloak.md) | Luồng PKCE, cấu hình IdP cho tổ chức, liên kết người dùng, JIT, đồng bộ nhóm → phòng ban |
+| 10 | [Cấu hình chung và khoá / token](10-cau-hinh-va-bi-mat.md) | Ba tầng cấu hình (tổ chức → phòng → cá nhân), khoá API của tổ chức, người dùng thường chỉnh được gì |
 
 Tài liệu liên quan ở repo `Demo-Chromium-Smart-Hub` (đường dẫn tương đối từ thư mục `DEMO`):
 

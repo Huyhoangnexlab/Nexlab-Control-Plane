@@ -78,6 +78,11 @@ export const entitlementPayloadSchema = z.object({
   /** vai trò → "origin:<origin>" → mức */
   access: z.record(z.string(), z.record(z.string(), level)),
   assign: z.array(z.object({ who: z.object({ subject: z.string() }), role: z.string() })),
+  /**
+   * Cấu hình KHÔNG bí mật đã ghép (tổ chức → phòng ban) cho đúng người này. `locked` = người dùng không đổi được.
+   * Chỉ chứa khoá trong danh mục (config-keys.ts); Hub kiểm lại từng giá trị bằng danh sách trắng của chính nó. Bí mật KHÔNG nằm ở đây.
+   */
+  config: z.record(z.string(), z.object({ value: z.string().max(300), locked: z.boolean() })).default({}),
 });
 export type EntitlementPayload = z.infer<typeof entitlementPayloadSchema>;
 

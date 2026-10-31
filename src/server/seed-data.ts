@@ -6,7 +6,14 @@ import type { AdminRole, HubRole } from "@/lib/validators";
  */
 
 /** Mật khẩu chung của mọi tài khoản mẫu (cả Control Plane lẫn Keycloak). Chỉ dùng trên máy dev. */
-export const DEV_PASSWORD = "Nexlab@2026";
+// Mật khẩu chung của tài khoản MẪU. Server công khai (demo) PHẢI đặt CP_SEED_PASSWORD (ngẫu nhiên, mạnh): ở production không chấp nhận
+// mật khẩu mặc định này (xem assertSeedPasswordSafe).
+const DEFAULT_DEV_PASSWORD = "Nexlab@2026";
+export const DEV_PASSWORD = process.env.CP_SEED_PASSWORD || DEFAULT_DEV_PASSWORD;
+export function assertSeedPasswordSafe(): void {
+  if (process.env.NODE_ENV === "production" && DEV_PASSWORD === DEFAULT_DEV_PASSWORD)
+    throw new Error("Production: phải đặt CP_SEED_PASSWORD khác mật khẩu mẫu mặc định trước khi nạp dữ liệu mẫu.");
+}
 
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || "http://localhost:8081";
 /** Client công khai của Hub trong mỗi realm (Authorization Code + PKCE). */

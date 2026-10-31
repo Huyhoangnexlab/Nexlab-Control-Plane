@@ -220,4 +220,45 @@ ALTER TABLE users DROP CONSTRAINT users_hub_role_check;
 ALTER TABLE users ADD CONSTRAINT users_hub_role_check CHECK (hub_role IN ('viewer','member','author','lead','admin'));
 `,
   },
+  {
+    version: 5,
+    name: "cau-hinh-va-bi-mat",
+    sql: `
+-- Cấu hình (KHÔNG bí mật) do quản trị tổ chức đặt, theo tổ chức hoặc theo phòng ban; 'locked' = người dùng / tầng dưới không đổi được.
+CREATE TABLE tenant_config (
+  tenant_id  text NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  scope_type text NOT NULL CHECK (scope_type IN ('org','dept')),
+  scope_id   text NOT NULL DEFAULT '',
+  key        text NOT NULL,
+  value      text NOT NULL,
+  locked     boolean NOT NULL DEFAULT false,
+  updated_by text,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (tenant_id, scope_type, scope_id, key),
+  CHECK ((scope_type = 'org' AND scope_id = '') OR (scope_type = 'dept' AND scope_id <> ''))
+);
+
+-- Khoá phòng ban bị xoá thì cấu hình riêng của phòng đó cũng mất (scope_id không có khoá ngoại vì dùng chung cột với cấp tổ chức).
+CREATE FUNCTION cp_cleanup_dept_config() RETURNS trigger AS $$
+BEGIN
+  DELETE FROM tenant_config WHERE scope_type = 'dept' AND scope_id = OLD.id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER departments_cleanup_config AFTER DELETE ON departments
+  FOR EACH ROW EXECUTE FUNCTION cp_cleanup_dept_config();
+
+-- Bí mật (khoá API, token) của tổ chức: bản mã AES-256-GCM (xem secrets-crypto.ts), KHÔNG lưu bản rõ. roles = vai Hub được nhận.
+CREATE TABLE tenant_secrets (
+  tenant_id  text NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  key        text NOT NULL,
+  ciphertext text NOT NULL,
+  last4      text NOT NULL,
+  roles      text[] NOT NULL,
+  updated_by text,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (tenant_id, key)
+);
+`,
+  },
 ];

@@ -1,7 +1,7 @@
 import type { Db } from "./db";
 import { newId } from "./ids";
 import { hashPassword } from "./password";
-import { BV_DEPT, BV_USERS, DEV_PASSWORD, HUB_CLIENT_ID, NEXLAB_DEPTS, NEXLAB_USERS, issuerOf } from "./seed-data";
+import { BV_DEPT, BV_USERS, DEV_PASSWORD, HUB_CLIENT_ID, NEXLAB_DEPTS, NEXLAB_USERS, assertSeedPasswordSafe, issuerOf } from "./seed-data";
 import type { Level } from "@/lib/levels";
 
 export { DEV_PASSWORD };
@@ -21,6 +21,7 @@ export async function seedIfEmpty(db: Db): Promise<boolean> {
 }
 
 export async function seedDatabase(db: Db): Promise<void> {
+  assertSeedPasswordSafe();
   const hash = await hashPassword(DEV_PASSWORD);
   const withIdp = process.env.CP_SEED_IDP !== "0";
 

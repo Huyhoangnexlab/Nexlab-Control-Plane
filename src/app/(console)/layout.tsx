@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import {
-  BookOpen, Building, Building2, ClipboardList, Eye, Grid3x3, LayoutDashboard, LogOut, Network, Settings, ShieldCheck, UserCircle, Users,
+  BookOpen, Building, Building2, ClipboardList, Eye, Grid3x3, KeyRound, LayoutDashboard, LogOut, Network, Settings, ShieldCheck, SlidersHorizontal, UserCircle, Users,
 } from "lucide-react";
 import { isDeptManager, isPlatformAdmin, isTenantAdmin } from "@/server/actor";
 import { requireActor } from "@/server/session";
@@ -29,6 +29,8 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
     nav.push({ href: "/apps", label: "Danh mục app", icon: <Grid3x3 className={ic} /> });
     nav.push({ href: "/access", label: "Phân quyền app", icon: <ShieldCheck className={ic} /> });
     nav.push({ href: "/preview", label: "Xem trước quyền", icon: <Eye className={ic} /> });
+    nav.push({ href: "/config", label: "Cấu hình chung", icon: <SlidersHorizontal className={ic} /> });
+    nav.push({ href: "/secrets", label: "Khoá & token", icon: <KeyRound className={ic} /> });
     nav.push({ href: "/audit", label: "Nhật ký", icon: <ClipboardList className={ic} /> });
     nav.push({ href: "/settings", label: "Cài đặt tổ chức", icon: <Settings className={ic} /> });
   } else if (manager) {

@@ -26,6 +26,7 @@ export const DOCS: DocMeta[] = [
   { slug: "07-lo-trinh-va-gioi-han", file: "07-lo-trinh-va-gioi-han.md", title: "Lộ trình & giới hạn đã biết", summary: "Cái gì đã làm, chưa làm, rủi ro." },
   { slug: "08-api-cho-hub", file: "08-api-cho-hub.md", title: "API cho Hub & gói quyền ký", summary: "discover, token, entitlements, cách Hub kiểm chữ ký." },
   { slug: "09-dang-nhap-sso-keycloak", file: "09-dang-nhap-sso-keycloak.md", title: "Đăng nhập SSO (OIDC) với Keycloak", summary: "Luồng PKCE, cấu hình IdP, liên kết người dùng, đồng bộ nhóm → phòng ban." },
+  { slug: "10-cau-hinh-va-bi-mat", file: "10-cau-hinh-va-bi-mat.md", title: "Cấu hình chung và khoá / token", summary: "Ba tầng cấu hình, khoá API của tổ chức, người dùng thường chỉ chỉnh được gì." },
 ];
 
 export function findDoc(slug: string): DocMeta | undefined {
@@ -101,6 +102,7 @@ export const START_HERE: Record<HelpAudience, { slug: string; heading?: string; 
     { slug: "02-vai-tro-va-quyen", label: "Vai trò & 22 quyền" },
     { slug: "09-dang-nhap-sso-keycloak", heading: "9.6 Đồng bộ nhóm → phòng ban", label: "Nhóm IdP đồng bộ phòng ban thế nào" },
     { slug: "05-chinh-sach-them-app-trong-hub", label: "Vì sao Hub cấm tự thêm app" },
+    { slug: "10-cau-hinh-va-bi-mat", label: "Cấu hình chung, khoá API và token của tổ chức" },
   ],
   manager: [
     { slug: "04-huong-dan-van-hanh", heading: "4.3 Trưởng phòng", label: "Việc của trưởng phòng" },

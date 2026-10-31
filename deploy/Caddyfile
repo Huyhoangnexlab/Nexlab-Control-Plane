@@ -1,0 +1,12 @@
+# HTTPS tự động (Let's Encrypt). Hai tên miền: CP_HOST (Control Plane) và KC_HOST (Keycloak).
+{$CP_HOST} {
+	encode zstd gzip
+	reverse_proxy control-plane:3000
+}
+
+{$KC_HOST} {
+	# Console quản trị Keycloak và realm master KHÔNG mở ra Internet (vào bằng đường hầm SSH khi cần).
+	@blocked path /admin* /realms/master* /metrics* /health*
+	respond @blocked 404
+	reverse_proxy keycloak:8080
+}

@@ -151,6 +151,11 @@ else /* r.payload đã tin cậy: áp quyền */;
 
 **Khi không kiểm được / hết hạn / mất mạng:** Hub **thu hẹp, không mở rộng**: dùng bản hợp lệ gần nhất còn hạn; không có thì chỉ mở app, tắt agent ([01 · 1.5](01-tong-quan.md)).
 
+## 8.6b `GET /v1/secrets` và trường `config` của gói quyền (31/10)
+
+- Gói quyền có thêm `payload.config`: `{ "<BIẾN>": { "value": "…", "locked": true|false } }` — cấu hình KHÔNG bí mật đã ghép tổ chức → phòng ban cho đúng người (được ký cùng gói). Chi tiết: [10](10-cau-hinh-va-bi-mat.md).
+- `GET /v1/secrets` (Bearer + `X-Device-Id`, như `/v1/entitlements`; 30 lần/phút/IP) → `{ "secrets": [{ "env", "value" }], "expiresInSeconds": 3600 }`: khoá API / token của tổ chức dành cho **vai Hub của người gọi** (giải mã tại server, trả qua HTTPS). Hub giữ trong RAM, không ghi đĩa. Bí mật **không** nằm trong gói quyền vì gói chỉ ký, không mã hoá. 401 thiếu / sai token; 403 người / thiết bị bị thu hồi.
+
 ## 8.7 `GET /v1/keys` và quản lý khoá
 
 `GET /v1/keys` → `{ "keys": [{ "keyId", "alg": "Ed25519", "publicKey": "<SPKI DER base64>" }] }`. **Chỉ tiện cho dev.** Ở production, Hub **nhúng** khoá công khai trong bản build; không tin khoá tải qua mạng (nếu không, kẻ chặn đường truyền thay khoá thì ký gói tuỳ ý).

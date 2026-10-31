@@ -16,7 +16,8 @@
 | Đăng nhập SSO với **Keycloak** (OIDC + PKCE): kiểm token JWKS, liên kết người dùng, JIT, đồng bộ nhóm → phòng ban, ép SSO | **ĐÃ LÀM** | 35 test (6 với Keycloak thật) + chạy thật bằng trình duyệt ([09](09-dang-nhap-sso-keycloak.md)). Chưa thử IdP khác (Entra, Google) |
 | Hub: `IdentityService` (PKCE, refresh token, làm mới gói quyền) | **ĐÃ LÀM** (30/10) | `src/main/access/` trong repo Hub; 58 test + chạy thật (đăng nhập, khoá, thu hồi, đổi quyền ~12 s, đăng xuất) |
 | Đăng nhập **Admin Console** bằng SSO | CHƯA LÀM | Hiện vẫn mật khẩu cục bộ |
-| Triển khai Google Cloud | CHƯA LÀM | Mốc M7 — mọi lệnh tạo tài nguyên phải được duyệt từng lần |
+| Cấu hình chung theo tầng + kho khoá / token của tổ chức (`/config`, `/secrets`, `GET /v1/secrets`) | **ĐÃ LÀM** (31/10) | 21 test + chạy thật với Hub; xem [10](10-cau-hinh-va-bi-mat.md). Chưa có cổng LLM phía server (khoá vẫn nằm trong RAM Hub), chưa xoay `CP_SECRETS_KEY` tự động |
+| Triển khai Google Cloud | **ĐÃ CHẠY DEMO** (31/10) | Một VM + docker compose (Caddy, Control Plane, Postgres, Keycloak); xem plan ở repo Hub `docs/superpowers/plans/2026-10-31-trien-khai-gcp-control-plane.md` |
 | Luồng xin quyền → duyệt, hết hạn, rà soát định kỳ, SCIM, maker-checker | CHƯA LÀM | Mốc M8 |
 
 ## 7.2 Giới hạn & rủi ro đã biết (nói thẳng)

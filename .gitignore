@@ -5,3 +5,8 @@ node_modules/
 next-env.d.ts
 .env.local
 .env.production
+
+# triển khai: bí mật + realm sinh ra
+deploy/.env
+deploy/realms/
+.deploy-secrets.txt

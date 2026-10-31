@@ -2,6 +2,8 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Docker / VM: đóng gói gọn (server.js + node_modules cần thiết) để image nhỏ.
+  output: "standalone",
   // Repo gốc cũng có package-lock.json — ghim root để Turbopack không đoán nhầm.
   turbopack: { root: path.join(__dirname) },
   // Trang Hướng dẫn đọc thư mục docs/ lúc chạy → phải đóng gói kèm khi build kiểu standalone (Docker / Cloud Run).

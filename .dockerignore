@@ -1,0 +1,10 @@
+node_modules
+.next
+.data
+.git
+.env*
+deploy
+keycloak
+test
+*.tsbuildinfo
+.claude

@@ -6,6 +6,7 @@ import { authenticate } from "../auth";
 import { deviceIdSchema } from "../devices";
 import { AppError, forbidden } from "../errors";
 import { findIdpOfTenant, resolveOidcCaller } from "./sso";
+import { resolveConfigForUser } from "./config";
 import { getSigner, trustedKeys } from "../signer";
 import { parseInput } from "../validate";
 import { ENTITLEMENT_DOMAIN, canonicalize, type EntitlementPayload, type SignedEntitlement, type TrustedKey } from "@/lib/entitlement";
@@ -169,6 +170,7 @@ export async function buildEntitlementPayload(d: Db, actor: Actor, deviceId: str
     roles: { effective: { label: HUB_ROLE_LABEL[role], can: [...ROLE_PERMS[role]], autonomyMax: ROLE_AUTONOMY_MAX[role] } },
     access: { effective: access },
     assign: [{ who: { subject: actor.userId }, role: "effective" }],
+    config: await resolveConfigForUser(d, tenantId, depts.map((x) => x.id)),
   };
 }
 
@@ -184,9 +186,14 @@ export async function signEntitlement(payload: EntitlementPayload): Promise<Sign
  *  - token `nxh_…`: token cục bộ, thiết bị nằm trong token;
  *  - còn lại: token OIDC của IdP, thiết bị lấy từ header `X-Device-Id` (`deviceHeader`).
  */
-export async function getSignedEntitlement(token: string | undefined, deviceHeader?: string | null, now: Date = new Date()): Promise<SignedEntitlement> {
+/** Bearer token → (người, thiết bị): dùng chung cho gói quyền và bí mật. */
+export async function resolveCaller(token: string | undefined, deviceHeader?: string | null): Promise<HubSession> {
   if (!token) throw new AppError("unauthenticated", "Thiếu token.");
-  const { actor, deviceId } = token.startsWith("nxh_") ? await resolveHubToken(token) : await resolveOidcCaller(token, deviceHeader);
+  return token.startsWith("nxh_") ? resolveHubToken(token) : resolveOidcCaller(token, deviceHeader);
+}
+
+export async function getSignedEntitlement(token: string | undefined, deviceHeader?: string | null, now: Date = new Date()): Promise<SignedEntitlement> {
+  const { actor, deviceId } = await resolveCaller(token, deviceHeader);
   const d = await db();
   await d.q("UPDATE devices SET last_seen = now() WHERE user_id = $1 AND id = $2", [actor.userId, deviceId]);
   return signEntitlement(await buildEntitlementPayload(d, actor, deviceId, now));
