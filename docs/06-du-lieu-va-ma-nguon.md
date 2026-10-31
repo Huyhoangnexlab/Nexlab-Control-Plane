@@ -18,7 +18,7 @@ Mọi bảng nghiệp vụ có `tenant_id` (trực tiếp hoặc qua bảng cha)
 | Bảng | Cột chính | Ràng buộc đáng chú ý |
 |---|---|---|
 | `tenants` | `id, name, slug (UNIQUE), domain (UNIQUE), status (active/suspended), policy_version, entitlement_ttl_hours (1–168), product_name, accent` | `policy_version` tăng mỗi thay đổi ảnh hưởng quyền |
-| `users` | `id, tenant_id, email, display_name, password_hash, admin_role (none/tenant_admin/platform_admin), hub_role (viewer/member/lead/admin), status (active/disabled), seeded, last_login_at` | Email duy nhất không phân biệt hoa thường. `CHECK`: `platform_admin` ⇔ `tenant_id` rỗng |
+| `users` | `id, tenant_id, email, display_name, password_hash, admin_role (none/tenant_admin/platform_admin), hub_role (viewer/member/author/lead/admin), status (active/disabled), seeded, last_login_at` | Email duy nhất không phân biệt hoa thường. `CHECK`: `platform_admin` ⇔ `tenant_id` rỗng |
 | `departments` | `id, tenant_id, name, description, manager_user_id` | `UNIQUE(tenant_id, name)`; trigger: trưởng phòng cùng tenant |
 | `memberships` | `user_id, department_id, source (manual/idp)` | Trigger: người dùng và phòng **cùng tenant**. `source='idp'` dành cho đồng bộ SCIM sau này (không gỡ tay được) |
 | `catalog_apps` | `id, tenant_id, name, origin, icon, color, tags[], max_level, status` | `UNIQUE(tenant_id, origin)` |
@@ -41,7 +41,7 @@ scripts/              seed.ts, reset.ts
 test/                 rules.test.ts, entitlements.test.ts (Postgres thật), docs.test.ts (kiểm link tài liệu)
 src/lib/              HÀM THUẦN, dùng chung được với Hub về sau
   entitlement.ts        định dạng gói quyền, canonicalize, verifyEntitlement (Hub sẽ nhập file này)
-  hub-permissions.ts    danh mục 15 quyền Hub, mặc định theo 4 vai trò, trần tự chủ
+  hub-permissions.ts    danh mục 17 quyền Hub, mặc định theo 5 vai trò, trần tự chủ
   levels.ts             thang mức, nhãn, kẹp trần, hợp mức
   effective.ts          computeEffective — quyền hiệu lực của MỘT người (lõi của gói quyền gửi Hub)
   origin.ts             chuẩn hoá origin app

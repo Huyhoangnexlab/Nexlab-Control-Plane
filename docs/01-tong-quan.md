@@ -30,7 +30,7 @@ Control Plane **không** thay Hub làm việc thật. Nó quyết định **danh
 | **Origin** | Địa chỉ app đã chuẩn hoá (`https://crm.congty.vn`), so khớp **chính xác**, không ký tự đại diện |
 | **Trần của app** (`max_level`) | Mức cao nhất bất kỳ phòng nào được cấp cho app đó |
 | **Mức quyền** (level) | Thang `none · open · ask · M0 · M1 · M2` (M3 chưa mở) — xem 1.4 |
-| **Vai trò dùng Hub** (`hub_role`) | `viewer / member / lead / admin` — quyết định các thao tác **trong Hub** (tầng 1, xem [02](02-vai-tro-va-quyen.md)) |
+| **Vai trò dùng Hub** (`hub_role`) | `viewer / member / author / lead / admin` — quyết định các thao tác **trong Hub** (tầng 1, xem [02](02-vai-tro-va-quyen.md)) |
 | **policy_version** | Số nguyên của tenant, tăng mỗi khi có thay đổi ảnh hưởng quyền. Hub dùng để chống nhận lại gói quyền cũ |
 
 ## 1.3 Quan hệ dữ liệu

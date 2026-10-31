@@ -3,7 +3,7 @@
 Có **hai tầng** quyền độc lập (xem [1.6](01-tong-quan.md#16-hai-tầng-quyền--đừng-nhầm)):
 
 - **Tầng 2** — quyền quản trị trên Control Plane: **ĐÃ LÀM**, có test.
-- **Tầng 1** — quyền dùng Hub: **20 quyền**, THIẾT KẾ (làm khi đưa RBAC vào Hub).
+- **Tầng 1** — quyền dùng Hub: **22 quyền**, **Hub đã cưỡng chế** (30/10).
 
 ---
 
@@ -78,11 +78,11 @@ Quản trị nền tảng chỉ có: danh sách tenant (kèm số lượng ngư�
 
 ---
 
-## Phần B — Tầng 1: 20 quyền dùng Hub (THIẾT KẾ)
+## Phần B — Tầng 1: 22 quyền dùng Hub
 
-> Trạng thái: **đã chốt thiết kế, chưa cưỡng chế trong Hub**. Hub hôm nay có đúng một vai ("người ngồi trước Shell") và vai đó là admin. Hub sẽ nhận bộ quyền này trong gói quyền từ Control Plane. Chi tiết engine: `docs/rbac/rbac-easy-customization-design-2026-10-30.md` ở repo Hub.
+> Trạng thái: **đã cưỡng chế trong Hub** (30/10): Hub nhận bộ quyền này trong gói quyền ký từ Control Plane và kiểm ở từng kênh IPC (Main). Chi tiết: `docs/rbac/rbac-hub-trien-khai-2026-10-30.md` ở repo Hub.
 
-**Cách đếm:** 4 quyền suy ra từ mức app + 15 quyền riêng lẻ + 1 quyền luôn mở (`policy.view`) = **20 quyền**; thêm 1 **trần số** (`autonomyMax`).
+**Cách đếm:** 4 quyền suy ra từ mức app + 17 quyền riêng lẻ + 1 quyền luôn mở (`policy.view`) = **22 quyền**; thêm 1 **trần số** (`autonomyMax`).
 
 ### B.1 Bốn quyền suy ra từ mức app (không bật tắt riêng)
 
@@ -95,55 +95,61 @@ Do ô trong ma trận phòng × app quyết định (xem [1.4](01-tong-quan.md#1
 | `agent.ask` | `ask` | Hỏi agent (`AgentQuery`). Vẫn cần tab đang `shared` — hai cổng độc lập |
 | `agent.act` | `M0` | Agent thao tác trên trang. Mức M0 chỉ đọc; M1/M2 cho ghi (theo bảng ở 1.4) |
 
-### B.2 Mười lăm quyền riêng lẻ
+### B.2 Mười bảy quyền riêng lẻ
 
 Cột "Rủi ro" là đánh giá của người viết: **Cao** = đụng bí mật / dữ liệu / mở rộng bề mặt tấn công.
 
 | # | Nhóm | Quyền | Gồm những thao tác (kênh IPC trong Hub) | Rủi ro | Ghi chú |
 |---|---|---|---|---|---|
-| 1 | Ứng dụng | `app.add` | Thêm app tự do (`AppsAdd`) | **Cao** | **Mặc định TẮT cho mọi vai** (chế độ 1, xem [05](05-chinh-sach-them-app-trong-hub.md)) |
-| 2 | | `app.remove` | Gỡ app, đổi tên app (`AppsRemove`, `AppsRename`) — xoá luôn cookie, cấu hình, hội thoại, consent của app | **Cao** | **Mặc định TẮT cho mọi vai.** App từ danh mục là app khoá, không gỡ được |
+| 1 | Ứng dụng | `app.add` | Thêm app tự do (`AppsAdd`) | **Cao** | **Chỉ quản trị Hub (`admin`) có mặc định.** App thêm tay chỉ có ở máy + tài khoản đó, mức tối đa `M0`, không vào danh mục tổ chức (xem [05](05-chinh-sach-them-app-trong-hub.md)) |
+| 2 | | `app.remove` | Gỡ app, đổi tên app (`AppsRemove`, `AppsRename`) — xoá luôn cookie, cấu hình, hội thoại, consent của app | **Cao** | Chỉ quản trị Hub có mặc định. App từ danh mục là app khoá, không gỡ được; chỉ gỡ được app thêm tay |
 | 3 | Agent | `mcp.consent` | Cho phép agent kết nối MCP của một app (`McpSetConsent`) — chỉ chiều **cấp**; thu hồi luôn được | TB | Cần mức app ≥ `ask` |
-| 4 | | `agent.config` | Sửa cấu hình agent, phạm vi SOP, nguồn dữ liệu (`AgentRegistryUpsert/Remove/Discover`, `AgentSetConfig`, `Sop*`) | **Cao** | Quy tắc "admin chỉ nâng Risk Tier, không hạ" vẫn giữ |
-| 5 | Cài đặt | `settings.config` | Sửa cấu hình triển khai chung và riêng từng app (`SettingsConfigSet/Clear`) | TB | Danh sách trắng biến vẫn là rào thứ hai: quyền này không mở thêm biến nào |
+| 4 | | `agent.config` | Sửa cấu hình agent, nguồn dữ liệu (`AgentRegistryUpsert/Remove/Discover`, `AgentSetConfig`) | **Cao** | Quy tắc "admin chỉ nâng Risk Tier, không hạ" vẫn giữ |
+| 5 | Cài đặt | `settings.config` | Sửa cấu hình triển khai chung và riêng từng app (`SettingsConfigSet/Clear`, `SettingsConfigAppSet/Clear`) | TB | Danh sách trắng biến vẫn là rào thứ hai: quyền này không mở thêm biến nào |
 | 6 | | `settings.apikeys` | Lưu/xoá khoá API, **xuất khoá ra `.env`** (`SettingsApiKeySet/Clear`, `SettingsEnvExport`) | **Cao** | Đòi xác thực mạnh hơn (PIN) |
 | 7 | Kỹ năng | `skill.edit` | Tạo, sửa, nhập, xuất, xoá skill (`UserSkillCreate/Update/Remove/Import/Export`) | TB | Skill nhập vào luôn ở trạng thái nháp; lint vẫn chạy |
 | 8 | | `skill.enable` | Bật skill đã qua lint (`UserSkillSetStatus`) | TB | Trần 5 skill bật mỗi app; M3 chỉ dùng skill đã chứng nhận |
 | 9 | | `skill.publish` | Bật skill **dùng chung** cho nhiều người | TB | Chưa có điểm cưỡng chế — cần chủ sở hữu skill + danh tính thật |
-| 10 | Bộ nhớ | `memory.view` | Xem bài học, quy trình nháp, thống kê bộ nhớ (`MemoryList`, `MemorySkillList/Get`, `MemoryAnalytics`, `MemoryPendingWrites`) | Thấp | |
-| 11 | | `memory.approve` | Duyệt thẻ ghi nhớ của agent (nhánh bài học trong `AgentResolveAction`) | TB | Đề xuất phải thuộc tab hiện tại |
-| 12 | | `memory.wipe` | Xoá bộ nhớ agent của chính mình (`MemoryWipe`) | Thấp | Mặc định **mọi vai** có — là quyền riêng tư của người dùng |
-| 13 | | `learn.run` | Bật chế độ tự học trên tab (`LearnStart/Stop`) | TB | Cần mức app ≥ `M0`; tự học **không bao giờ ghi thật** |
-| 14 | Quản trị | `audit.view` | Xem nhật ký trong Hub | Thấp | Chưa có kênh đọc audit; làm cùng giai đoạn giao diện |
-| 15 | | `policy.edit` | Sửa / nhập / xuất chính sách (`policy:*`) | **Cao** | Cần xác thực mạnh; luật chống tự nâng quyền áp dụng |
+| 10 | SOP & hồ sơ app | `sop.author` | Duyệt thư viện SOP, chọn thư mục SOP, xem trước phạm vi, đọc nội dung SOP (`SopListPages/ListRoots/PreviewScope/CatalogList/CatalogRead`) | TB | Dành cho **người soạn SOP**; không tự bật skill cho người khác |
+| 11 | | `app.profile.edit` | Sửa / xoá cấu hình riêng một app (`SettingsConfigAppSet/Clear`) — trong danh sách biến cho phép | TB | `settings.config` cũng đủ để sửa; quyền này cho người soạn SOP sửa cấu hình app mà không động tới cấu hình chung |
+| 12 | Bộ nhớ | `memory.view` | Xem bài học, quy trình nháp, thống kê bộ nhớ (`MemoryList`, `MemorySkillList/Get`, `MemoryAnalytics`, `MemoryPendingWrites`) | Thấp | |
+| 13 | | `memory.approve` | Duyệt thẻ ghi nhớ của agent (nhánh bài học trong `AgentResolveAction`) | TB | Đề xuất phải thuộc tab hiện tại |
+| 14 | | `memory.wipe` | Xoá bộ nhớ agent của chính mình (`MemoryWipe`) | Thấp | Mặc định **mọi vai** có — là quyền riêng tư của người dùng |
+| 15 | | `learn.run` | Bật chế độ tự học trên tab (`LearnStart/Stop`) | TB | Cần mức app ≥ `M0`; tự học **không bao giờ ghi thật** |
+| 16 | Quản trị | `audit.view` | Xem nhật ký trong Hub | Thấp | Chưa có kênh đọc audit; làm cùng giai đoạn giao diện |
+| 17 | | `policy.edit` | Sửa / nhập / xuất chính sách (`policy:*`) | **Cao** | Cần xác thực mạnh; luật chống tự nâng quyền áp dụng |
 
 ### B.3 Quyền luôn mở (không cổng nào chặn)
 
 `policy.view` (xem "vì sao tôi bị chặn"), nút **Ngắt** (`AutomationCancel`), chuyển tab về riêng tư, đóng tab, đổi tab / bố cục. Nguyên tắc: **hành động thu hẹp bề mặt không bao giờ bị khoá.**
 
-### B.4 Mặc định theo bốn vai trò Hub (đã áp chế độ 1)
+### B.4 Mặc định theo năm vai trò Hub
 
-| Quyền | Chỉ đọc (`viewer`) | Nhân viên (`member`) | Trưởng nhóm (`lead`) | Quản trị Hub (`admin`) |
-|---|---|---|---|---|
-| `app.add`, `app.remove` | ✗ | ✗ | ✗ | **✗** |
-| `mcp.consent` | ✗ | ✗ | ✓ | ✓ |
-| `agent.config` | ✗ | ✗ | ✗ | ✓ |
-| `settings.config` | ✗ | ✗ | ✗ | ✓ |
-| `settings.apikeys` | ✗ | ✗ | ✗ | ✓ (cần PIN) |
-| `skill.edit`, `skill.enable` | ✗ | ✓ | ✓ | ✓ |
-| `skill.publish` | ✗ | ✗ | ✗ | ✓ (khi có danh tính thật) |
-| `memory.view`, `memory.approve` | ✗ | ✓ | ✓ | ✓ |
-| `memory.wipe` | ✓ | ✓ | ✓ | ✓ |
-| `learn.run` | ✗ | ✗ | ✓ | ✓ |
-| `audit.view` | ✗ | ✗ | ✓ | ✓ |
-| `policy.edit` | ✗ | ✗ | ✗ | ✓ (cần PIN) |
-| **Trần tự chủ mặc định** | M0 | M1 | M2 | M2 |
+| Quyền | Chỉ đọc (`viewer`) | Nhân viên (`member`) | Người soạn SOP (`author`) | Trưởng nhóm (`lead`) | Quản trị Hub (`admin`) |
+|---|---|---|---|---|---|
+| `app.add`, `app.remove` | ✗ | ✗ | ✗ | ✗ | **✓** |
+| `mcp.consent` | ✗ | ✗ | ✗ | ✓ | ✓ |
+| `agent.config` | ✗ | ✗ | ✗ | ✗ | ✓ |
+| `settings.config` | ✗ | ✗ | ✗ | ✗ | ✓ |
+| `settings.apikeys` | ✗ | ✗ | ✗ | ✗ | ✓ (cần PIN) |
+| `skill.edit`, `skill.enable` | ✗ | ✓ | ✓ | ✓ | ✓ |
+| `skill.publish` | ✗ | ✗ | ✗ | ✗ | ✓ (khi có danh tính thật) |
+| `sop.author` | ✗ | ✗ | **✓** | ✓ | ✓ |
+| `app.profile.edit` | ✗ | ✗ | **✓** | ✗ | ✓ |
+| `memory.view`, `memory.approve` | ✗ | ✓ | ✓ | ✓ | ✓ |
+| `memory.wipe` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `learn.run` | ✗ | ✗ | ✓ | ✓ | ✓ |
+| `audit.view` | ✗ | ✗ | ✗ | ✓ | ✓ |
+| `policy.edit` | ✗ | ✗ | ✗ | ✗ | ✓ (cần PIN) |
+| **Trần tự chủ mặc định** | M0 | M1 | M1 | M2 | M2 |
+
+**Người soạn SOP (`author`)** là vai dành cho người viết / thử SOP và cấu hình app: có `sop.author`, `app.profile.edit`, `learn.run`, `skill.edit/enable`, nhưng **không** có `app.add`, khoá API, cấu hình agent hay chính sách. Họ chỉ làm việc trên các app được cấp (mức app ≥ `M0` để thử trên trang). Phạm vi theo app lấy từ ma trận phòng × app như mọi vai khác.
 
 Đây là đề xuất khởi điểm; vai trò khác của khách tạo bằng cách nhân bản vai trò có sẵn rồi bớt/thêm quyền (**không** có kế thừa vai trò).
 
 ### B.5 Một người = một vai trò Hub
 
-Trường `users.hub_role` (đã có trong Control Plane, hiện **chưa có tác dụng** vì Hub chưa nhận). Người thuộc nhiều phòng vẫn chỉ có **một** vai trò Hub; còn **app** thì hợp các phòng.
+Trường `users.hub_role` (5 giá trị) được gửi trong gói quyền và Hub cưỡng chế. Người thuộc nhiều phòng vẫn chỉ có **một** vai trò Hub; còn **app** thì hợp các phòng.
 
 ---
 

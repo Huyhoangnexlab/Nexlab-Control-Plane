@@ -1,6 +1,6 @@
 # 5. Chính sách thêm app trực tiếp trong Hub
 
-> Trạng thái: **QUYẾT ĐỊNH ĐÃ CHỐT (30/10/2026): mặc định CẤM, mở theo quyền.** Phần cưỡng chế trong Hub là **THIẾT KẾ**; phần cấu hình trong Control Plane (cờ theo tenant) **chưa làm**.
+> Trạng thái: **QUYẾT ĐỊNH (30/10/2026): mặc định CẤM, mở theo quyền; quản trị Hub của tổ chức (`admin`) được cấp `app.add` / `app.remove`.** Hub đã cưỡng chế; cờ cấu hình theo tenant (bật/tắt quyền cho từng vai) **chưa làm**.
 
 ## 5.1 Vấn đề
 
@@ -21,11 +21,11 @@ Hôm nay Hub cho **bất kỳ ai** ngồi trước Shell tự thêm app (`AppsAd
 
 | Chế độ | Tên | Hành vi | Dành cho | Trạng thái |
 |---|---|---|---|---|
-| **1** | **Cấm hẳn** *(mặc định)* | Chỉ app trong danh mục mở được. Nút "Thêm app" ẩn. `app.add` và `app.remove` **không vai trò nào có** (kể cả Quản trị Hub) | Mọi tenant mặc định; bắt buộc với y tế / dữ liệu nhạy cảm | Chốt |
-| 2 | Cho phép, chỉ để mở | Người có quyền `app.add` thêm app cá nhân; app đó không có agent, không đồng bộ | Công ty thường, khi muốn linh hoạt | Dự kiến — chỉ bật khi tenant admin **cấp quyền `app.add` cho một vai trò** |
+| **1** | **Cấm theo quyền** *(mặc định)* | Chỉ app trong danh mục mở được. Nút "Thêm app" ẩn với ai không có `app.add`. Mặc định chỉ **Quản trị Hub (`admin`)** có `app.add` / `app.remove`; mọi vai khác không | Mọi tenant; tenant y tế / dữ liệu nhạy cảm nên bỏ quyền này khỏi `admin` | **Đã làm** (30/10) |
+| 2 | Cho phép thêm cho vai khác | Cấp `app.add` cho thêm một vai | Công ty thường, khi muốn linh hoạt | Dự kiến — cần màn bật/tắt quyền theo vai (chưa làm) |
 | 3 | Đề xuất → duyệt | Người dùng bấm "Đề xuất app" → quản trị tổ chức duyệt → vào danh mục → cấp cho phòng | Khi cần quản lý chặt nhưng vẫn linh hoạt | Dự kiến (M8, luồng xin quyền) |
 
-**"Cấm hẳn theo quyền"** nghĩa là: không có cờ riêng nào ngoài hệ thống quyền. Chế độ 1 = **không vai nào có `app.add`**. Muốn mở cho một nhóm, quản trị tổ chức **bật quyền `app.add` cho vai trò đó** (chuyển sang chế độ 2). Một cờ phụ `allowUnlistedApps` trong gói quyền luôn là `false` ở chế độ managed; Hub dùng nó để biết có cho phép origin ngoài danh mục hay không.
+**"Cấm theo quyền"** nghĩa là: không có cờ riêng nào ngoài hệ thống quyền. Ai có `app.add` thì thêm được; mặc định đó là `admin`. **App do `admin` thêm tay:** chỉ có trên máy + tài khoản đó (lưu trong thư mục dữ liệu của chính người đó), **không** vào danh mục tổ chức, **không** tới máy người khác, mức tối đa **`M0`** (agent đề xuất, người duyệt từng bước — không bao giờ tự ghi), HTTPS và không địa chỉ nội bộ như cũ. Mất quyền `app.add` (đổi vai, gói hết hạn) thì app thêm tay bị **ẩn** (không xoá dữ liệu); có lại quyền thì hiện lại. Muốn app cho nhiều người thì thêm vào danh mục (mục 5.4). Một cờ phụ `allowUnlistedApps` trong gói quyền luôn là `false` ở chế độ managed; Hub dùng nó để biết có cho phép origin ngoài danh mục hay không.
 
 ## 5.4 Nếu người dùng cần một app chưa có
 
@@ -40,7 +40,7 @@ Hôm nay "báo" là làm ngoài hệ thống (chat, email). Chế độ 3 sẽ b
 
 | Điểm trong Hub | Hành vi ở chế độ 1 |
 |---|---|
-| `AppsAdd` | Từ chối nếu người dùng không có `app.add`; ghi audit `access.denied` |
+| `AppsAdd` | Từ chối nếu người dùng không có `app.add`; ghi audit `access.denied` (**Hub đã cưỡng chế**) |
 | `AppsRemove`, `AppsRename` | Từ chối với app khoá; cần `app.remove` với app cá nhân |
 | `CustomAppStore` khi nạp `apps.json` | Bỏ qua app không nằm trong gói quyền (chống sửa tay `apps.json`); ghi audit |
 | `ListApps`, `ViewCreate` | Chỉ trả / mở app có trong gói quyền, kể cả nhánh dựng app từ `AgentSpec` |

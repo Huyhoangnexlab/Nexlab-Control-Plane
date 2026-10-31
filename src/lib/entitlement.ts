@@ -56,7 +56,7 @@ export const entitlementPayloadSchema = z.object({
   subject: z.object({
     email: z.string(),
     label: z.string(),
-    hubRole: z.enum(["viewer", "member", "lead", "admin"]),
+    hubRole: z.enum(["viewer", "member", "author", "lead", "admin"]),
     departments: z.array(z.object({ id: z.string(), name: z.string(), isManager: z.boolean() })),
   }),
   mode: z.literal("enforce"),

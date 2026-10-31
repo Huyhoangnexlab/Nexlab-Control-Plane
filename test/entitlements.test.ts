@@ -143,7 +143,21 @@ describe("entitlements — nội dung", () => {
     expect(other.payload.apps.map((a) => a.label)).toEqual(["HIS Demo"]);
   });
 
-  it("người chưa thuộc phòng nào → không có app; không vai Hub nào có app.add / app.remove", async () => {
+  it("vai «Người soạn SOP» (author) có sop.author + app.profile.edit nhưng không có app.add; admin có app.add / app.remove", async () => {
+    const au = await fetchBundle(await login("soansop@nexlab.tech"));
+    expect(au.payload.subject.hubRole).toBe("author");
+    expect(au.payload.roles.effective.can).toEqual([...ROLE_PERMS.author]);
+    for (const p of ["sop.author", "app.profile.edit", "learn.run"]) expect(au.payload.roles.effective.can).toContain(p);
+    for (const p of ["app.add", "app.remove", "settings.apikeys", "agent.config", "policy.edit"]) expect(au.payload.roles.effective.can).not.toContain(p);
+    expect(au.payload.roles.effective.autonomyMax).toBe("M1");
+    const ad = await fetchBundle(await login("admin@nexlab.tech"));
+    for (const p of ["app.add", "app.remove", "sop.author", "app.profile.edit"]) expect(ad.payload.roles.effective.can).toContain(p);
+    // Người thường (member) không bao giờ có
+    const m = await fetchBundle(await login("nv.nhansu@nexlab.tech"));
+    for (const p of ["app.add", "app.remove", "sop.author", "app.profile.edit"]) expect(m.payload.roles.effective.can).not.toContain(p);
+  });
+
+  it("người chưa thuộc phòng nào → không có app; chỉ vai admin có app.add / app.remove", async () => {
     const d = await db();
     const uid = await userId("khach.xem@nexlab.tech");
     await d.q("DELETE FROM memberships WHERE user_id = $1", [uid]);
@@ -152,8 +166,8 @@ describe("entitlements — nội dung", () => {
     expect(b.payload.access.effective).toEqual({});
     expect(b.payload.roles.effective.can).toEqual(["memory.wipe"]);
     for (const role of HUB_ROLE_ORDER) {
-      expect(ROLE_PERMS[role]).not.toContain("app.add");
-      expect(ROLE_PERMS[role]).not.toContain("app.remove");
+      expect(ROLE_PERMS[role].includes("app.add"), role).toBe(role === "admin");
+      expect(ROLE_PERMS[role].includes("app.remove"), role).toBe(role === "admin");
       for (const perm of ROLE_PERMS[role]) expect(PERMS).toContain(perm);
     }
     await d.q("INSERT INTO memberships (user_id, department_id) VALUES ($1,$2)", [uid, await deptId("Kinh doanh")]);

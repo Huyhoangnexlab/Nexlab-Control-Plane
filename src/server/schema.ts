@@ -27,7 +27,7 @@ CREATE TABLE users (
   display_name  text NOT NULL,
   password_hash text NOT NULL,
   admin_role    text NOT NULL DEFAULT 'none' CHECK (admin_role IN ('none','tenant_admin','platform_admin')),
-  hub_role      text NOT NULL DEFAULT 'member' CHECK (hub_role IN ('viewer','member','lead','admin')),
+  hub_role      text NOT NULL DEFAULT 'member' CHECK (hub_role IN ('viewer','member','lead','admin')), -- migration 4 thêm 'author'
   status        text NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
   seeded        boolean NOT NULL DEFAULT false,
   created_at    timestamptz NOT NULL DEFAULT now(),
@@ -209,6 +209,15 @@ CREATE UNIQUE INDEX users_idp_uq ON users (idp_issuer, idp_sub) WHERE idp_sub IS
 -- Tên nhóm ở IdP tương ứng với phòng ban (thành viên phòng đến từ IdP, không phải từ trưởng phòng).
 ALTER TABLE departments ADD COLUMN idp_group text;
 CREATE UNIQUE INDEX departments_idp_group_uq ON departments (tenant_id, lower(idp_group)) WHERE idp_group IS NOT NULL;
+`,
+  },
+  {
+    version: 4,
+    name: "vai-tro-hub-author",
+    sql: `
+-- Thêm vai trò Hub «author» (người soạn SOP / cấu hình app). Ràng buộc cũ do CREATE TABLE tự đặt tên: users_hub_role_check.
+ALTER TABLE users DROP CONSTRAINT users_hub_role_check;
+ALTER TABLE users ADD CONSTRAINT users_hub_role_check CHECK (hub_role IN ('viewer','member','author','lead','admin'));
 `,
   },
 ];

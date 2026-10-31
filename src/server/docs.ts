@@ -98,7 +98,7 @@ export const START_HERE: Record<HelpAudience, { slug: string; heading?: string; 
   tenant_admin: [
     { slug: "04-huong-dan-van-hanh", heading: "4.2 Quản trị tổ chức (tenant admin)", label: "Thiết lập tổ chức theo đúng thứ tự" },
     { slug: "04-huong-dan-van-hanh", heading: "4.5 Quy trình người mới · chuyển phòng · nghỉ việc (làm tay hôm nay)", label: "Người mới · chuyển phòng · nghỉ việc" },
-    { slug: "02-vai-tro-va-quyen", label: "Vai trò & 20 quyền" },
+    { slug: "02-vai-tro-va-quyen", label: "Vai trò & 22 quyền" },
     { slug: "09-dang-nhap-sso-keycloak", heading: "9.6 Đồng bộ nhóm → phòng ban", label: "Nhóm IdP đồng bộ phòng ban thế nào" },
     { slug: "05-chinh-sach-them-app-trong-hub", label: "Vì sao Hub cấm tự thêm app" },
   ],

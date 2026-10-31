@@ -56,13 +56,13 @@ describe("tài liệu", () => {
   it("bảng 20 quyền trong docs/02 khớp danh mục quyền trong mã", () => {
     const doc02 = read("02-vai-tro-va-quyen.md");
     for (const p of PERMS) expect(doc02, `thiếu quyền ${p} trong docs/02`).toContain(`\`${p}\``);
-    // chế độ 1: không vai nào có app.add / app.remove, và docs ghi đúng điều đó
+    // chỉ quản trị Hub (admin) có app.add / app.remove; mọi vai khác không
     for (const role of Object.keys(ROLE_PERMS) as (keyof typeof ROLE_PERMS)[]) {
-      expect(ROLE_PERMS[role]).not.toContain("app.add");
-      expect(ROLE_PERMS[role]).not.toContain("app.remove");
+      expect(ROLE_PERMS[role].includes("app.add"), `app.add ở vai ${role}`).toBe(role === "admin");
+      expect(ROLE_PERMS[role].includes("app.remove"), `app.remove ở vai ${role}`).toBe(role === "admin");
     }
-    expect(PERMS).toHaveLength(15);
-    expect(Object.keys(PERM_INFO)).toHaveLength(15);
+    expect(PERMS).toHaveLength(17);
+    expect(Object.keys(PERM_INFO)).toHaveLength(17);
   });
 
   it("không có markdown nào còn liên kết tương đối tới nơi không hiển thị được ngoài các tài liệu repo Hub", () => {

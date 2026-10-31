@@ -21,11 +21,12 @@ export const passwordSchema = z
 export const nameSchema = (label: string, min = 2) =>
   z.string().trim().min(min, `${label} tối thiểu ${min} ký tự.`).max(80, `${label} tối đa 80 ký tự.`);
 
-export const HUB_ROLES = ["viewer", "member", "lead", "admin"] as const;
+export const HUB_ROLES = ["viewer", "member", "author", "lead", "admin"] as const;
 export type HubRole = (typeof HUB_ROLES)[number];
 export const HUB_ROLE_LABEL: Record<HubRole, string> = {
   viewer: "Chỉ đọc",
   member: "Nhân viên",
+  author: "Người soạn SOP",
   lead: "Trưởng nhóm",
   admin: "Quản trị Hub",
 };

@@ -222,6 +222,24 @@
       ]
     },
     {
+      "username": "soansop@nexlab.tech",
+      "email": "soansop@nexlab.tech",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Ngô",
+      "lastName": "Bảo Châu",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Nexlab@2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/cntt"
+      ]
+    },
+    {
       "username": "khach.xem@nexlab.tech",
       "email": "khach.xem@nexlab.tech",
       "emailVerified": true,

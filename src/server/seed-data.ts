@@ -31,6 +31,7 @@ export const NEXLAB_USERS: SeedUser[] = [
   { key: "e-acc", email: "nv.ketoan@nexlab.tech", name: "Võ Thanh Tùng", adminRole: "none", hubRole: "member", depts: ["acc"] },
   { key: "e-sales", email: "nv.kinhdoanh@nexlab.tech", name: "Đặng Khánh Linh", adminRole: "none", hubRole: "member", depts: ["sales"] },
   { key: "e-multi", email: "kiemnhiem@nexlab.tech", name: "Bùi Gia Bảo (Kinh doanh + CNTT)", adminRole: "none", hubRole: "member", depts: ["sales", "it"] },
+  { key: "author", email: "soansop@nexlab.tech", name: "Ngô Bảo Châu (Người soạn SOP)", adminRole: "none", hubRole: "author", depts: ["it"] },
   { key: "viewer", email: "khach.xem@nexlab.tech", name: "Khách chỉ xem", adminRole: "none", hubRole: "viewer", depts: ["sales"] },
 ];
 

@@ -16,6 +16,8 @@ export const PERMS = [
   "skill.edit",
   "skill.enable",
   "skill.publish",
+  "sop.author",
+  "app.profile.edit",
   "memory.view",
   "memory.approve",
   "memory.wipe",
@@ -28,8 +30,8 @@ export type Perm = (typeof PERMS)[number];
 export type Risk = "cao" | "trung-binh" | "thap";
 
 export const PERM_INFO: Record<Perm, { group: string; label: string; risk: Risk; description: string }> = {
-  "app.add": { group: "Ứng dụng", label: "Thêm app tự do", risk: "cao", description: "Thêm app tự do trong Hub. Mặc định TẮT cho mọi vai (chế độ 1: cấm hẳn)." },
-  "app.remove": { group: "Ứng dụng", label: "Gỡ / đổi tên app", risk: "cao", description: "Gỡ app hoặc đổi tên (xoá cookie, cấu hình, hội thoại của app). Mặc định TẮT cho mọi vai." },
+  "app.add": { group: "Ứng dụng", label: "Thêm app tự do", risk: "cao", description: "Thêm app tự do trong Hub (chỉ quản trị Hub có mặc định). App thêm tay chỉ có trên máy và tài khoản đó, mức tối đa M0 (duyệt từng bước), không vào danh mục của tổ chức." },
+  "app.remove": { group: "Ứng dụng", label: "Gỡ / đổi tên app", risk: "cao", description: "Gỡ app hoặc đổi tên (xoá cookie, cấu hình, hội thoại của app). Chỉ quản trị Hub có mặc định; app từ danh mục tổ chức là app khoá, không gỡ được." },
   "mcp.consent": { group: "Agent", label: "Cho phép kết nối MCP", risk: "trung-binh", description: "Cho agent kết nối MCP của một app (chỉ chiều cấp; thu hồi luôn được)." },
   "agent.config": { group: "Agent", label: "Sửa cấu hình agent", risk: "cao", description: "Sửa cấu hình agent, phạm vi SOP, nguồn dữ liệu." },
   "settings.config": { group: "Cài đặt", label: "Sửa cấu hình triển khai", risk: "trung-binh", description: "Sửa cấu hình chung và riêng từng app (trong danh sách biến cho phép)." },
@@ -37,6 +39,8 @@ export const PERM_INFO: Record<Perm, { group: string; label: string; risk: Risk;
   "skill.edit": { group: "Kỹ năng & bộ nhớ", label: "Sửa skill", risk: "trung-binh", description: "Tạo, sửa, nhập, xuất, xoá skill (skill nhập vào luôn là bản nháp)." },
   "skill.enable": { group: "Kỹ năng & bộ nhớ", label: "Bật skill", risk: "trung-binh", description: "Bật skill đã qua lint (tối đa 5 skill bật mỗi app)." },
   "skill.publish": { group: "Kỹ năng & bộ nhớ", label: "Chia sẻ skill dùng chung", risk: "trung-binh", description: "Bật skill dùng chung cho nhiều người (cần danh tính thật)." },
+  "sop.author": { group: "SOP & hồ sơ app", label: "Soạn / chọn SOP", risk: "trung-binh", description: "Duyệt thư viện SOP, chọn thư mục SOP cho app, xem trước phạm vi và đọc nội dung SOP để soạn / kiểm. Không tự bật skill cho người khác." },
+  "app.profile.edit": { group: "SOP & hồ sơ app", label: "Sửa cấu hình riêng từng app", risk: "trung-binh", description: "Sửa / xoá cấu hình riêng của một app (trong danh sách biến cho phép), phục vụ cấu hình hồ sơ app khi soạn SOP." },
   "memory.view": { group: "Kỹ năng & bộ nhớ", label: "Xem bộ nhớ agent", risk: "thap", description: "Xem bài học, quy trình nháp, thống kê bộ nhớ." },
   "memory.approve": { group: "Kỹ năng & bộ nhớ", label: "Duyệt thẻ ghi nhớ", risk: "trung-binh", description: "Duyệt thẻ ghi nhớ do agent đề xuất." },
   "memory.wipe": { group: "Kỹ năng & bộ nhớ", label: "Xoá bộ nhớ của mình", risk: "thap", description: "Xoá bộ nhớ agent của chính mình (quyền riêng tư — mọi vai đều có)." },
@@ -45,20 +49,22 @@ export const PERM_INFO: Record<Perm, { group: string; label: string; risk: Risk;
   "policy.edit": { group: "Quản trị", label: "Sửa chính sách", risk: "cao", description: "Sửa / nhập / xuất chính sách. Đòi xác thực mạnh hơn." },
 };
 
-/** Mặc định theo 4 vai trò Hub (đã áp chế độ 1: không vai nào có app.add / app.remove). */
+/** Mặc định theo 5 vai trò Hub. Chỉ `admin` (quản trị Hub của tổ chức) có app.add / app.remove; `author` = người soạn SOP / cấu hình app. */
 export const ROLE_PERMS: Record<HubRole, readonly Perm[]> = {
   viewer: ["memory.wipe"],
   member: ["skill.edit", "skill.enable", "memory.view", "memory.approve", "memory.wipe"],
-  lead: ["mcp.consent", "skill.edit", "skill.enable", "memory.view", "memory.approve", "memory.wipe", "learn.run", "audit.view"],
-  admin: ["mcp.consent", "agent.config", "settings.config", "settings.apikeys", "skill.edit", "skill.enable", "skill.publish", "memory.view", "memory.approve", "memory.wipe", "learn.run", "audit.view", "policy.edit"],
+  author: ["skill.edit", "skill.enable", "sop.author", "app.profile.edit", "memory.view", "memory.approve", "memory.wipe", "learn.run"],
+  lead: ["mcp.consent", "skill.edit", "skill.enable", "sop.author", "memory.view", "memory.approve", "memory.wipe", "learn.run", "audit.view"],
+  admin: ["app.add", "app.remove", "mcp.consent", "agent.config", "settings.config", "settings.apikeys", "skill.edit", "skill.enable", "skill.publish", "sop.author", "app.profile.edit", "memory.view", "memory.approve", "memory.wipe", "learn.run", "audit.view", "policy.edit"],
 };
 
 /** Trần chế độ tự chủ theo vai trò. Hub lấy min(trần vai trò, mức app, lựa chọn của người dùng). */
 export const ROLE_AUTONOMY_MAX: Record<HubRole, Extract<Level, "M0" | "M1" | "M2">> = {
   viewer: "M0",
   member: "M1",
+  author: "M1",
   lead: "M2",
   admin: "M2",
 };
 
-export const HUB_ROLE_ORDER: readonly HubRole[] = ["viewer", "member", "lead", "admin"];
+export const HUB_ROLE_ORDER: readonly HubRole[] = ["viewer", "member", "author", "lead", "admin"];

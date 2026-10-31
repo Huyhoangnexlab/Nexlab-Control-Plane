@@ -8,7 +8,7 @@ import { Avatar, Badge, buttonClass, Card, EmptyState, PageHeader, relativeTime,
 import { CheckboxGroup, FormDialog, SelectField, TextField, TriggerButton } from "@/components/ui/form";
 import { HUB_ROLE_LABEL, HUB_ROLES } from "@/lib/validators";
 
-const HUB_TONE: Record<string, Tone> = { viewer: "slate", member: "indigo", lead: "violet", admin: "amber" };
+const HUB_TONE: Record<string, Tone> = { viewer: "slate", member: "indigo", author: "cyan", lead: "violet", admin: "amber" };
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ q?: string; dept?: string; status?: string }> }) {
   const sp = await searchParams;
