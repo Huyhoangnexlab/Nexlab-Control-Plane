@@ -156,6 +156,10 @@ else /* r.payload đã tin cậy: áp quyền */;
 - Gói quyền có thêm `payload.config`: `{ "<BIẾN>": { "value": "…", "locked": true|false } }` — cấu hình KHÔNG bí mật đã ghép tổ chức → phòng ban cho đúng người (được ký cùng gói). Chi tiết: [10](10-cau-hinh-va-bi-mat.md).
 - `GET /v1/secrets` (Bearer + `X-Device-Id`, như `/v1/entitlements`; 30 lần/phút/IP) → `{ "secrets": [{ "env", "value" }], "expiresInSeconds": 3600 }`: khoá API / token của tổ chức dành cho **vai Hub của người gọi** (giải mã tại server, trả qua HTTPS). Hub giữ trong RAM, không ghi đĩa. Bí mật **không** nằm trong gói quyền vì gói chỉ ký, không mã hoá. 401 thiếu / sai token; 403 người / thiết bị bị thu hồi.
 
+## 8.6c «Xin quyền» (31/10): `GET /v1/catalog`, `POST /v1/access-requests`
+
+Cùng cách xác thực như `/v1/entitlements` (Bearer + `X-Device-Id`). `GET /v1/catalog` → `{ "apps": [{ "id", "name" }] }` — tên các app đang bật trong danh mục của tổ chức (không địa chỉ) để chọn khi xin. `POST /v1/access-requests` `{ "appId"?, "message" }` → `201 { "id" }`. **Không tự cấp quyền**: chỉ tạo yêu cầu cho quản trị tổ chức / trưởng phòng của người xin (trang **Yêu cầu quyền**, nút «Đã cấp» / «Từ chối», có audit). Giới hạn: tối đa 5 yêu cầu chờ mỗi người, không xin lặp cùng app khi đang chờ, lý do ≤ 500 ký tự.
+
 ## 8.7 `GET /v1/keys` và quản lý khoá
 
 `GET /v1/keys` → `{ "keys": [{ "keyId", "alg": "Ed25519", "publicKey": "<SPKI DER base64>" }] }`. **Chỉ tiện cho dev.** Ở production, Hub **nhúng** khoá công khai trong bản build; không tin khoá tải qua mạng (nếu không, kẻ chặn đường truyền thay khoá thì ký gói tuỳ ý).
