@@ -78,6 +78,8 @@ for (const r of KEYCLOAK_REALMS) {
         firstName: first,
         lastName: rest.join(" ") || "-",
         credentials: [{ type: "password", value: DEV_PASSWORD, temporary: false }],
+        // Không ghi realmRoles thì người dùng nạp qua --import-realm KHÔNG có vai trò nào → «Account console» (đổi mật khẩu) báo HTTP 401.
+        realmRoles: [`default-roles-${r.realm}`],
         groups: u.groups.map((g) => `/${g}`),
       };
     }),
