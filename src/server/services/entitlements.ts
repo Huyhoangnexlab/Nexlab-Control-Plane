@@ -14,6 +14,7 @@ import { computeEffective } from "@/lib/effective";
 import { ROLE_AUTONOMY_MAX, ROLE_PERMS } from "@/lib/hub-permissions";
 import type { Level } from "@/lib/levels";
 import { emailSchema, HUB_ROLE_LABEL, type HubRole } from "@/lib/validators";
+import type { SopScopeV1 } from "@/lib/sop-scope";
 
 /**
  * Hai cách Hub xác thực:
@@ -134,8 +135,8 @@ export async function buildEntitlementPayload(d: Db, actor: Actor, deviceId: str
   if (!u) throw new AppError("not_found", "Không tìm thấy người dùng.");
   const depts = await d.q<{ id: string; name: string; manager_user_id: string | null }>(
     "SELECT d.id, d.name, d.manager_user_id FROM memberships m JOIN departments d ON d.id = m.department_id WHERE m.user_id = $1 AND d.tenant_id = $2 ORDER BY d.name", [actor.userId, tenantId]);
-  const apps = await d.q<{ id: string; name: string; origin: string; icon: string; color: string; tags: string[]; max_level: Level; status: "active" | "disabled" }>(
-    "SELECT id, name, origin, icon, color, tags, max_level, status FROM catalog_apps WHERE tenant_id = $1", [tenantId]);
+  const apps = await d.q<{ id: string; name: string; origin: string; icon: string; color: string; tags: string[]; max_level: Level; status: "active" | "disabled"; sop_scope: SopScopeV1 | null }>(
+    "SELECT id, name, origin, icon, color, tags, max_level, status, sop_scope FROM catalog_apps WHERE tenant_id = $1", [tenantId]);
   const deptApps = await d.q<{ department_id: string; app_id: string; level: Level }>(
     "SELECT department_id, app_id, level FROM department_apps WHERE department_id = ANY($1::text[])", [depts.map((x) => x.id)]);
 
@@ -146,6 +147,7 @@ export async function buildEntitlementPayload(d: Db, actor: Actor, deviceId: str
     userDeptIds: depts.map((x) => x.id),
   });
   const tagsOf = new Map(apps.map((a) => [a.id, a.tags]));
+  const sopScopeOf = new Map(apps.filter((a) => a.sop_scope).map((a) => [a.id, a.sop_scope as SopScopeV1]));
   const role = u.hub_role;
   const access: Record<string, Exclude<Level, "none">> = {};
   for (const e of effective) access[`origin:${e.origin}`] = e.level as Exclude<Level, "none">;
@@ -166,7 +168,7 @@ export async function buildEntitlementPayload(d: Db, actor: Actor, deviceId: str
     },
     mode: "enforce",
     allowUnlistedApps: false,
-    apps: effective.map((e) => ({ catalogAppId: e.appId, origin: e.origin, label: e.name, tags: tagsOf.get(e.appId) ?? [], icon: e.icon, color: e.color })),
+    apps: effective.map((e) => ({ catalogAppId: e.appId, origin: e.origin, label: e.name, tags: tagsOf.get(e.appId) ?? [], icon: e.icon, color: e.color, ...(sopScopeOf.has(e.appId) ? { sopScope: sopScopeOf.get(e.appId)! } : {}) })),
     roles: { effective: { label: HUB_ROLE_LABEL[role], can: [...ROLE_PERMS[role]], autonomyMax: ROLE_AUTONOMY_MAX[role] } },
     access: { effective: access },
     assign: [{ who: { subject: actor.userId }, role: "effective" }],

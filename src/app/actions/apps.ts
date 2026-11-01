@@ -3,6 +3,7 @@
 import { requireActor, runAction } from "@/server/session";
 import { createApp, deleteApp, updateApp } from "@/server/services/apps";
 import { setDepartmentAppLevel } from "@/server/services/access";
+import { setAppSopScope } from "@/server/services/sop-scope";
 import type { ActionResult } from "@/lib/action-result";
 
 export async function saveAppAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
@@ -31,6 +32,13 @@ export async function deleteAppAction(_prev: ActionResult, formData: FormData): 
   return runAction(async () => {
     await deleteApp(await requireActor(), String(formData.get("id") ?? ""));
     return { message: "Đã xoá app khỏi danh mục." };
+  });
+}
+
+export async function clearSopScopeAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    await setAppSopScope(await requireActor(), String(formData.get("id") ?? ""), { sopScope: null });
+    return { message: "Đã bỏ phạm vi SOP — app về mặc định (mọi gốc được chia sẻ)." };
   });
 }
 

@@ -81,6 +81,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-benhvien-b"
+      ],
       "groups": []
     },
     {
@@ -96,6 +99,9 @@
           "value": "Nexlab@2026",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-benhvien-b"
       ],
       "groups": [
         "/khoa-noi"

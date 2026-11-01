@@ -8,6 +8,7 @@
 import { createPublicKey, verify } from "node:crypto";
 import { z } from "zod";
 import { PERMS } from "./hub-permissions";
+import { sopScopeSchema } from "./sop-scope";
 
 export const ENTITLEMENT_DOMAIN = "nexlab-entitlement-v1\n";
 export const ENTITLEMENT_CLOCK_SKEW_MS = 5 * 60 * 1000;
@@ -69,6 +70,8 @@ export const entitlementPayloadSchema = z.object({
     tags: z.array(z.string()),
     icon: z.string(),
     color: z.string(),
+    /** Phạm vi SOP do tổ chức đặt cho app này (mọi nhân viên được cấp app nhận). Thiếu = chưa đặt. */
+    sopScope: sopScopeSchema.optional(),
   })),
   roles: z.record(z.string(), z.object({
     label: z.string(),

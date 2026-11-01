@@ -90,6 +90,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-nexlab"
+      ],
       "groups": [
         "/cntt"
       ]
@@ -107,6 +110,9 @@
           "value": "Nexlab@2026",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-nexlab"
       ],
       "groups": [
         "/nhan-su"
@@ -126,6 +132,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-nexlab"
+      ],
       "groups": [
         "/ke-toan"
       ]
@@ -143,6 +152,9 @@
           "value": "Nexlab@2026",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-nexlab"
       ],
       "groups": [
         "/kinh-doanh"
@@ -162,6 +174,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-nexlab"
+      ],
       "groups": [
         "/nhan-su"
       ]
@@ -179,6 +194,9 @@
           "value": "Nexlab@2026",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-nexlab"
       ],
       "groups": [
         "/ke-toan"
@@ -198,6 +216,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-nexlab"
+      ],
       "groups": [
         "/kinh-doanh"
       ]
@@ -215,6 +236,9 @@
           "value": "Nexlab@2026",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-nexlab"
       ],
       "groups": [
         "/kinh-doanh",
@@ -235,6 +259,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-nexlab"
+      ],
       "groups": [
         "/cntt"
       ]
@@ -253,6 +280,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-nexlab"
+      ],
       "groups": [
         "/kinh-doanh"
       ]
@@ -270,6 +300,9 @@
           "value": "Nexlab@2026",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-nexlab"
       ],
       "groups": [
         "/kinh-doanh"

@@ -1,8 +1,9 @@
 import { Grid3x3, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 import { guard, requireActor } from "@/server/session";
 import { listApps } from "@/server/services/apps";
+import { sopScopeSummary } from "@/server/services/sop-scope";
 import { requireTenantAdmin } from "@/server/actor";
-import { deleteAppAction, saveAppAction } from "@/app/actions/apps";
+import { clearSopScopeAction, deleteAppAction, saveAppAction } from "@/app/actions/apps";
 import { AppIcon, Badge, Card, EmptyState, LevelBadge, PageHeader } from "@/components/ui/primitives";
 import { ColorField, FormDialog, SelectField, TextField, TriggerButton } from "@/components/ui/form";
 import { ASSIGNABLE_LEVELS, LEVEL_HINT, LEVEL_LABEL } from "@/lib/levels";
@@ -17,6 +18,7 @@ export default async function AppsPage() {
   const actor = await requireActor();
   await guard(() => requireTenantAdmin(actor));
   const apps = await listApps(actor);
+  const sopScopes = await sopScopeSummary(actor);
   const ceilings = ASSIGNABLE_LEVELS.filter((l) => l !== "none").map((l) => ({ value: l, label: `${LEVEL_LABEL[l]} — ${LEVEL_HINT[l]}` }));
 
   const form = (a?: (typeof apps)[number]) => (
@@ -75,6 +77,20 @@ export default async function AppsPage() {
                 {a.tags.map((t) => <Badge key={t} tone="slate">#{t}</Badge>)}
               </div>
               <p className="mt-3 text-xs text-slate-500">{a.departments === 0 ? "Chưa phòng nào dùng" : `Đang cấp cho ${a.departments} phòng`}</p>
+              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                <span>Phạm vi SOP:</span>
+                {a.id in sopScopes ? (
+                  <>
+                    <Badge tone="indigo">{sopScopes[a.id] === 0 ? "mọi gốc được chia sẻ" : `${sopScopes[a.id]} gốc`}</Badge>
+                    <FormDialog title="Bỏ phạm vi SOP?" description={`«${a.name}» sẽ về mặc định: agent tìm trong mọi SOP đã chia sẻ cho Notion integration.`} action={clearSopScopeAction} submitLabel="Bỏ phạm vi" submitVariant="danger" size="sm" trigger={<TriggerButton variant="ghost" size="sm" title="Bỏ phạm vi SOP" className="hover:bg-rose-50 hover:text-rose-600"><Trash2 className="size-3.5" /></TriggerButton>}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <p className="text-sm text-slate-600">Người soạn SOP đặt lại phạm vi từ Hub (cấu hình agent của app).</p>
+                    </FormDialog>
+                  </>
+                ) : (
+                  <span className="text-slate-400">chưa đặt (mặc định)</span>
+                )}
+              </p>
             </Card>
           ))}
         </div>

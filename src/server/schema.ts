@@ -282,4 +282,12 @@ CREATE INDEX access_requests_tenant_idx ON access_requests (tenant_id, status, c
 CREATE INDEX access_requests_user_idx ON access_requests (user_id, status);
 `,
   },
+  {
+    version: 7,
+    name: "pham-vi-sop-theo-app",
+    sql: `
+-- Phạm vi SOP của app do tổ chức đặt (JSON: gốc Notion + bộ lọc; chỉ id + tiêu đề trang, không có nội dung SOP). NULL = chưa đặt (mặc định mọi gốc được chia sẻ).
+ALTER TABLE catalog_apps ADD COLUMN sop_scope jsonb;
+`,
+  },
 ];

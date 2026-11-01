@@ -160,6 +160,12 @@ else /* r.payload đã tin cậy: áp quyền */;
 
 Cùng cách xác thực như `/v1/entitlements` (Bearer + `X-Device-Id`). `GET /v1/catalog` → `{ "apps": [{ "id", "name" }] }` — tên các app đang bật trong danh mục của tổ chức (không địa chỉ) để chọn khi xin. `POST /v1/access-requests` `{ "appId"?, "message" }` → `201 { "id" }`. **Không tự cấp quyền**: chỉ tạo yêu cầu cho quản trị tổ chức / trưởng phòng của người xin (trang **Yêu cầu quyền**, nút «Đã cấp» / «Từ chối», có audit). Giới hạn: tối đa 5 yêu cầu chờ mỗi người, không xin lặp cùng app khi đang chờ, lý do ≤ 500 ký tự.
 
+## 8.6d Phạm vi SOP của từng app (01/11): `PUT /v1/apps/{id}/sop-scope`
+
+- Phạm vi SOP (các gốc Notion agent được tra cứu, loại trừ, bộ lọc, trạng thái được dùng) là **của cả tổ chức theo từng app**, đặt một lần rồi mọi nhân viên được cấp app đều dùng. Lưu ở `catalog_apps.sop_scope` (migration 7), nằm trong gói quyền đã ký ở `apps[].sopScope` nên Hub xác minh chữ ký như mọi trường khác.
+- `PUT /v1/apps/{id}/sop-scope` `{ "sopScope": {...} | null }` (Bearer + `X-Device-Id`): `null` = bỏ phạm vi. Chỉ quản trị tổ chức, hoặc người có vai Hub `author` / `lead` / `admin` **và** app đã được cấp cho phòng của họ (mức khác `none`). Máy chủ tự kiểm theo token, không tin Hub. Dữ liệu qua `sopScopeSchema` (tối đa 25 gốc, 500 mục loại trừ, 24 KB). Thành công → `policyVersion` tăng, audit `app.sop_scope_set` / `app.sop_scope_clear`.
+- Trang **Ứng dụng** của Control Plane hiện «Phạm vi SOP: N gốc / mọi gốc / chưa đặt» và cho quản trị bỏ phạm vi.
+
 ## 8.7 `GET /v1/keys` và quản lý khoá
 
 `GET /v1/keys` → `{ "keys": [{ "keyId", "alg": "Ed25519", "publicKey": "<SPKI DER base64>" }] }`. **Chỉ tiện cho dev.** Ở production, Hub **nhúng** khoá công khai trong bản build; không tin khoá tải qua mạng (nếu không, kẻ chặn đường truyền thay khoá thì ký gói tuỳ ý).
