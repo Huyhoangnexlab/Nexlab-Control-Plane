@@ -10,6 +10,11 @@ Bản sinh realm mới (gen-keycloak-realms.ts) đã ghi sẵn `realmRoles`; scr
 import json
 import os
 import sys
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 import urllib.parse
 import urllib.request
 
