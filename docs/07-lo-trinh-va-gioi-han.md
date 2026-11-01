@@ -47,6 +47,7 @@
 3. **Cấu hình chế độ thêm app theo tenant** (5.3) và màn bật/tắt quyền theo vai trò.
 4. ~~Làm RBAC trong Hub~~ — **xong** (30/10, xem `docs/rbac/rbac-hub-trien-khai-2026-10-30.md` ở repo Hub). Dữ liệu theo người (M6) cũng đã xong. Việc kế: API nhận audit từ Hub, UI xin quyền.
 5. **Đưa lên GCP** (M7) sau khi có SSO thật.
+6. **Vertex AI dùng chung**: giai đoạn A (cấp JSON service account) **xong 01/11**; giai đoạn B (token ngắn hạn do server cấp, khoá không rời Control Plane) **chưa làm** — kế hoạch và nhiệm vụ B0–B5 ở `docs/superpowers/plans/2026-11-01-vertex-chung-service-account.md` (repo Hub).
 
 ## 7.4 Quyết định còn mở
 

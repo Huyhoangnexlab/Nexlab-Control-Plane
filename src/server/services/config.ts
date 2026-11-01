@@ -9,7 +9,7 @@ import {
   DEFAULT_SECRET_ROLES,
   ORG_CONFIG_KEYS,
   ORG_SECRET_KEYS,
-  SECRET_VALUE_RE,
+  normalizeSecretValue,
   orgConfigKey,
   orgSecretKey,
   resolveConfig,
@@ -108,6 +108,7 @@ export interface SecretEntry {
   key: string;
   label: string;
   usedBy: string;
+  multiline: boolean;
   configured: boolean;
   /** 4 ký tự cuối — để nhận ra khoá nào, không đủ để dùng lại. Giá trị đầy đủ KHÔNG BAO GIỜ trả về. */
   last4: string | null;
@@ -123,7 +124,7 @@ export async function listSecrets(actor: Actor): Promise<SecretEntry[]> {
   const by = new Map(rows.map((r) => [r.key, r]));
   return ORG_SECRET_KEYS.map((k) => {
     const r = by.get(k.env);
-    return { key: k.env, label: k.label, usedBy: k.usedBy, configured: Boolean(r), last4: r?.last4 ?? null, roles: r?.roles ?? [...DEFAULT_SECRET_ROLES], updatedAt: r?.updated_at ?? null };
+    return { key: k.env, label: k.label, usedBy: k.usedBy, multiline: Boolean(k.multiline), configured: Boolean(r), last4: r?.last4 ?? null, roles: r?.roles ?? [...DEFAULT_SECRET_ROLES], updatedAt: r?.updated_at ?? null };
   });
 }
 
@@ -144,8 +145,15 @@ export async function setSecret(actor: Actor, input: unknown): Promise<void> {
   if (!spec) throw invalid("Khoá không nằm trong danh mục cho phép.", { key: "Khoá không hợp lệ." });
   const roles = [...new Set(v.roles)].filter((r): r is HubRole => (HUB_ROLES as readonly string[]).includes(r) && r !== "viewer");
   if (roles.length === 0) throw invalid("Chọn ít nhất một vai trò được nhận khoá.", { roles: "Chọn ít nhất một vai." });
-  const value = v.value.trim();
-  if (value && !SECRET_VALUE_RE.test(value)) throw invalid("Khoá phải dài 8–512 ký tự in được, không có khoảng trắng.", { value: "Khoá không hợp lệ." });
+  const raw = v.value.trim();
+  const norm = raw ? normalizeSecretValue(v.key, raw) : null;
+  if (raw && !norm) {
+    throw invalid(
+      spec.multiline ? "Không đọc được JSON service account — dán nguyên file JSON tải từ Google Cloud (có type, project_id, client_email, private_key; tối đa 4096 ký tự)." : "Khoá phải dài 8–512 ký tự in được, không có khoảng trắng.",
+      { value: "Khoá không hợp lệ." },
+    );
+  }
+  const value = norm?.value ?? "";
   await tx(async (t) => {
     const cur = await t.one<{ last4: string }>("SELECT last4 FROM tenant_secrets WHERE tenant_id=$1 AND key=$2 FOR UPDATE", [tenantId, v.key]);
     if (!cur && !value) throw invalid("Hãy nhập giá trị khoá.", { value: "Chưa nhập khoá." });
@@ -153,7 +161,7 @@ export async function setSecret(actor: Actor, input: unknown): Promise<void> {
       await t.q(
         `INSERT INTO tenant_secrets (tenant_id, key, ciphertext, last4, roles, updated_by) VALUES ($1,$2,$3,$4,$5,$6)
          ON CONFLICT (tenant_id, key) DO UPDATE SET ciphertext = EXCLUDED.ciphertext, last4 = EXCLUDED.last4, roles = EXCLUDED.roles, updated_by = EXCLUDED.updated_by, updated_at = now()`,
-        [tenantId, v.key, encryptSecret(value, `${tenantId}|${v.key}`), value.slice(-4), roles, actor.userId],
+        [tenantId, v.key, encryptSecret(value, `${tenantId}|${v.key}`), norm!.last4, roles, actor.userId],
       );
     } else {
       await t.q("UPDATE tenant_secrets SET roles = $3, updated_by = $4, updated_at = now() WHERE tenant_id=$1 AND key=$2", [tenantId, v.key, roles, actor.userId]);

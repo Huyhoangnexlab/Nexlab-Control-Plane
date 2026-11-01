@@ -35,7 +35,7 @@ Giao diện Hub: mục bị khoá hiện «Do tổ chức đặt · khoá», m�
 
 ## 10.4 Khoá API và token
 
-- Trang **Khoá & token**: 6 loại (Gemini, OpenRouter, TypeSafe, Anthropic, OpenAI, Notion). Nhập giá trị → mã hoá → chỉ còn «Đã đặt · ••••4 ký tự cuối». Chọn **vai Hub được nhận** (mặc định nhân viên, người soạn SOP, trưởng nhóm, quản trị; **viewer không bao giờ nhận**).
+- Trang **Khoá & token**: 7 loại (Gemini, OpenRouter, TypeSafe, Anthropic, OpenAI, Notion, và JSON service account Google Cloud cho Vertex AI — xem 10.7). Nhập giá trị → mã hoá → chỉ còn «Đã đặt · ••••4 ký tự cuối». Chọn **vai Hub được nhận** (mặc định nhân viên, người soạn SOP, trưởng nhóm, quản trị; **viewer không bao giờ nhận**).
 - Hub đăng nhập xong → nhận gói quyền → gọi `GET /v1/secrets` (Bearer + `X-Device-Id`, giới hạn 30 lần/phút/IP) → Control Plane chỉ trả khoá có **vai của người gọi** trong danh sách nhận. Chủ thể lấy từ token, không từ yêu cầu.
 - Hub làm mới mỗi chu kỳ (15 phút / khi focus): khoá bị **xoá hoặc thu hồi vai** ở web → biến mất khỏi Hub ở lần làm mới kế; lỗi mạng tạm thời giữ khoá đang có; 401/403 thu hồi ngay; đăng xuất / bị vô hiệu hoá / gói hết hạn → thu hồi hết, khoá nhập tay trước đó (nếu có) hiện lại.
 - Khi cấu hình hoặc khoá đổi, Hub **khởi động lại agent đang rảnh** để agent nhận (agent Python chỉ đọc env lúc khởi động); agent bận thì giữ nguyên.
@@ -48,6 +48,14 @@ Giao diện Hub: mục bị khoá hiện «Do tổ chức đặt · khoá», m�
 3. `CP_SECRETS_KEY` (32 byte base64) **bắt buộc ở production**, tách khỏi khoá ký gói quyền. Mất khoá này = không giải mã được các khoá đã lưu (phải nhập lại); đổi khoá = nhập lại. Chưa có xoay khoá tự động.
 4. Cấu hình theo phòng chỉ **quản trị tổ chức** đặt (trưởng phòng chưa được).
 5. Hub lọc lại mọi giá trị bằng danh sách trắng của chính nó — Control Plane không thể đặt biến môi trường tuỳ ý trên máy người dùng.
+
+## 10.7 Gemini qua Vertex AI dùng chung (01/11/2026)
+
+Khoá thứ 7 trong **Khoá & token**: «Google Cloud (Vertex AI) — service account chung» (`GOOGLE_SERVICE_ACCOUNT_JSON`). Dán **nguyên file JSON** của một service account Google Cloud (quyền `roles/aiplatform.user`). Control Plane kiểm hình dạng (`type: service_account`, `project_id`, `client_email`, `private_key`, ≤ 4096 ký tự), lưu dạng JSON gọn, mã hoá như mọi khoá khác, chỉ còn «Đã đặt · ••••4 ký tự cuối `private_key_id`». **Từ chối** JSON `authorized_user` (ADC của một người — mang refresh token và mọi quyền của người đó).
+
+Bật cho cả công ty gồm ba việc: (1) dán JSON ở **Khoá & token** và chọn vai nhận; (2) ở **Cấu hình chung** đặt `GOOGLE_GENAI_USE_VERTEXAI=true`, `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`; (3) nhân viên đăng nhập lại Hub. Hub nhận khoá chỉ vào RAM (không hiện trong danh sách khoá, không xuất `.env`), agent Python nạp thẳng từ JSON và **thắng ADC có sẵn trên máy**.
+
+**Giới hạn của giai đoạn này:** khoá dài hạn nằm trong RAM máy nhân viên (dùng được ngoài Hub tới khi thu hồi); xoay khoá làm thủ công; chung quota/hoá đơn. Lộ trình nâng lên **token ngắn hạn do server cấp** (khoá không rời Control Plane) nằm trong `docs/superpowers/plans/2026-11-01-vertex-chung-service-account.md` ở repo Hub (giai đoạn B).
 
 ## 10.6 Dành cho lập trình viên
 

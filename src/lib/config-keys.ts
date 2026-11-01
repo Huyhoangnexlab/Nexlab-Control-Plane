@@ -39,10 +39,16 @@ export const ORG_CONFIG_KEYS: readonly OrgConfigKey[] = [
   { env: "NEXLAB_AUTONOMY", label: "Chế độ tự chủ của agent", hint: "M0 chỉ đọc · M1 duyệt từng lần ghi · M2 duyệt kế hoạch. Trần vai trò và mức app vẫn áp thêm.", kind: "enum", options: ["M0", "M1", "M2"], group: "agent" },
 ];
 
+/** Biến môi trường (Hub → tiến trình agent) chứa NGUYÊN VĂN JSON của service account Google Cloud. KHÔNG phải đường dẫn file. */
+export const SERVICE_ACCOUNT_ENV = "GOOGLE_SERVICE_ACCOUNT_JSON";
+export const SERVICE_ACCOUNT_MAX_CHARS = 4096;
+
 export interface OrgSecretKey {
   env: string;
   label: string;
   usedBy: string;
+  /** Giá trị nhiều dòng / dài (JSON): giao diện dùng ô văn bản lớn thay vì ô mật khẩu một dòng. */
+  multiline?: boolean;
 }
 
 export const ORG_SECRET_KEYS: readonly OrgSecretKey[] = [
@@ -52,6 +58,12 @@ export const ORG_SECRET_KEYS: readonly OrgSecretKey[] = [
   { env: "ANTHROPIC_API_KEY", label: "Anthropic (Claude)", usedBy: "Planner khi chọn provider Anthropic" },
   { env: "OPENAI_API_KEY", label: "OpenAI", usedBy: "Planner khi chọn provider OpenAI" },
   { env: "NOTION_TOKEN", label: "Notion (thư viện SOP)", usedBy: "Agent đọc SOP từ Notion" },
+  {
+    env: SERVICE_ACCOUNT_ENV,
+    label: "Google Cloud (Vertex AI) — service account chung",
+    usedBy: "Gemini qua Vertex AI cho cả công ty: dán NGUYÊN file JSON của service account (quyền Vertex AI User). Dùng cùng 3 cấu hình Vertex ở trang Cấu hình (bật Vertex, project, vùng)",
+    multiline: true,
+  },
 ];
 
 /** Vai Hub nhận bí mật mặc định: mọi vai ngoại trừ viewer (chỉ đọc, không dùng agent). */
@@ -64,6 +76,29 @@ export const SECRET_VALUE_RE = /^[\x21-\x7E]{8,512}$/;
 
 export const orgConfigKey = (env: string): OrgConfigKey | undefined => ORG_CONFIG_KEYS.find((k) => k.env === env);
 export const orgSecretKey = (env: string): OrgSecretKey | undefined => ORG_SECRET_KEYS.find((k) => k.env === env);
+
+/**
+ * Kiểm + chuẩn hoá giá trị MỘT bí mật. Trả `{ value, last4 }` (value đã chuẩn hoá; last4 chỉ để nhận ra khoá, không đủ để dùng) hoặc null.
+ *  - khoá thường: 8–512 ký tự in được, không khoảng trắng;
+ *  - service account Google: JSON ≤ 4096 ký tự, `type: service_account`, có `client_email`, `project_id`, `private_key` PEM — lưu dạng JSON gọn một dòng.
+ */
+export function normalizeSecretValue(env: string, raw: string): { value: string; last4: string } | null {
+  const v = String(raw ?? "").trim();
+  if (env !== SERVICE_ACCOUNT_ENV) return SECRET_VALUE_RE.test(v) ? { value: v, last4: v.slice(-4) } : null;
+  if (!v || v.length > SERVICE_ACCOUNT_MAX_CHARS) return null;
+  try {
+    const o = JSON.parse(v) as Record<string, unknown>;
+    if (!o || typeof o !== "object" || Array.isArray(o)) return null;
+    const str = (k: string) => (typeof o[k] === "string" ? (o[k] as string) : "");
+    if (str("type") !== "service_account" || !str("client_email").includes("@") || !str("project_id") || !/^-----BEGIN (RSA )?PRIVATE KEY-----/.test(str("private_key"))) return null;
+    const value = JSON.stringify(o);
+    if (value.length > SERVICE_ACCOUNT_MAX_CHARS) return null;
+    const id = str("private_key_id");
+    return { value, last4: (id || str("client_email")).slice(-4) };
+  } catch {
+    return null;
+  }
+}
 
 /** Kiểm giá trị một khoá cấu hình; trả giá trị đã chuẩn hoá hoặc null nếu không hợp lệ. */
 export function validateOrgConfigValue(spec: Pick<OrgConfigKey, "kind" | "options">, raw: string): string | null {

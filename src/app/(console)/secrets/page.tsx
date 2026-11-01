@@ -4,7 +4,7 @@ import { requireTenantAdmin } from "@/server/actor";
 import { listSecrets } from "@/server/services/config";
 import { clearSecretAction, saveSecretAction } from "@/app/actions/config";
 import { Badge, Card, PageHeader, formatDateTime } from "@/components/ui/primitives";
-import { CheckboxGroup, FormDialog, TextField, TriggerButton } from "@/components/ui/form";
+import { CheckboxGroup, FormDialog, TextAreaField, TextField, TriggerButton } from "@/components/ui/form";
 import { HUB_ROLES, HUB_ROLE_LABEL } from "@/lib/validators";
 
 export default async function SecretsPage() {
@@ -44,7 +44,11 @@ export default async function SecretsPage() {
             <div className="flex">
               <FormDialog title={s.label} description={s.key} action={saveSecretAction} size="md" trigger={<TriggerButton variant="secondary" size="sm"><Pencil className="size-3.5" /> {s.configured ? "Đổi khoá / vai nhận" : "Đặt khoá"}</TriggerButton>}>
                 <input type="hidden" name="key" value={s.key} />
-                <TextField label={s.configured ? "Khoá mới (để trống nếu chỉ đổi vai nhận)" : "Giá trị khoá"} name="value" type="password" autoComplete="new-password" placeholder="••••••••" hint="8–512 ký tự, không khoảng trắng. Lưu xong không xem lại được." />
+                {s.multiline ? (
+                  <TextAreaField label={s.configured ? "JSON mới (để trống nếu chỉ đổi vai nhận)" : "Nội dung file JSON"} name="value" rows={8} placeholder={'{ "type": "service_account", "project_id": "…", … }'} hint="Dán nguyên file JSON của service account. Được lưu mã hoá, chỉ ghi — không xem lại được." />
+                ) : (
+                  <TextField label={s.configured ? "Khoá mới (để trống nếu chỉ đổi vai nhận)" : "Giá trị khoá"} name="value" type="password" autoComplete="new-password" placeholder="••••••••" hint="8–512 ký tự, không khoảng trắng. Lưu xong không xem lại được." />
+                )}
                 <CheckboxGroup label="Vai trò Hub được nhận khoá" name="roles" options={roleOptions} defaultValues={s.roles} hint="Vai «Chỉ đọc» không bao giờ nhận khoá." />
               </FormDialog>
               {s.configured && (
