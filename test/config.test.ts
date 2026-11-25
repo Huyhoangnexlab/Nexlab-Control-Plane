@@ -9,6 +9,9 @@ process.env.CP_DB_SCHEMA = `test_${Date.now().toString(36)}_${Math.floor(Math.ra
 process.env.CP_ALLOW_DEV_ORIGINS = "0";
 process.env.CP_SIGNING_KEY_PEM = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }) as string;
 process.env.CP_SECRETS_KEY = randomBytes(32).toString("base64");
+// File này kiểm CƠ CHẾ giao khoá bản rõ (lọc theo vai, audit, bản mã bị dán) — tức chế độ `legacy`. Chế độ mặc định `gateway`
+// (khoá mô hình không rời server) có test riêng ở llm-gateway.test.ts.
+process.env.CP_SECRET_DELIVERY = "legacy";
 
 import { closeDb, db } from "@/server/db";
 import { loadActor } from "@/server/actor";

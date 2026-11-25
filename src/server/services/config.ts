@@ -17,6 +17,7 @@ import {
   type ConfigRow,
   type ResolvedConfig,
 } from "@/lib/config-keys";
+import { GATEWAY_PATH, GATEWAY_WITHHELD_SECRETS, LLM_PROVIDERS, PROVIDER_SECRET, type LlmProvider } from "@/lib/llm-gateway";
 import { HUB_ROLES, type HubRole } from "@/lib/validators";
 
 /* ───────────────────────── Cấu hình (không bí mật) ───────────────────────── */
@@ -187,18 +188,36 @@ export async function clearSecret(actor: Actor, input: unknown): Promise<void> {
 
 export interface DeliveredSecret { env: string; value: string }
 
+/** `legacy` = giao khoá mô hình bản rõ như trước (cho bản Hub cũ chưa biết cổng LLM). Mặc định `gateway`. */
+export function secretDeliveryMode(env: NodeJS.ProcessEnv = process.env): "gateway" | "legacy" {
+  return env.CP_SECRET_DELIVERY === "legacy" ? "legacy" : "gateway";
+}
+
+export interface SecretDelivery {
+  secrets: DeliveredSecret[];
+  /** Chế độ gateway: Hub gọi mô hình qua `{máy chủ}{path}/{provider}/…`; chỉ có TÊN nhà cung cấp dùng được, không có khoá. */
+  llmGateway?: { path: string; providers: LlmProvider[] };
+  expiresInSeconds: number;
+}
+
 /**
  * Bí mật giao cho MỘT người trên MỘT thiết bị: chỉ các bí mật có vai của người đó trong danh sách nhận. Giải mã tại đây, trả qua HTTPS
  * cho Hub (Hub giữ trong RAM, không ghi đĩa). Ghi audit (tên khoá, không giá trị) — tối đa một dòng mỗi giờ cho mỗi (người, thiết bị).
+ *
+ * Chế độ gateway (mặc định): khoá của các nhà cung cấp mô hình KHÔNG được giao — Hub chỉ nhận danh sách nhà cung cấp và gọi qua cổng
+ * `/v1/llm` (services/llm-gateway.ts). Bí mật còn giao bản rõ: những khoá chưa có đường qua server (hiện là token Notion).
  */
-export async function deliverSecrets(actor: Actor, deviceId: string): Promise<{ secrets: DeliveredSecret[]; expiresInSeconds: number }> {
+export async function deliverSecrets(actor: Actor, deviceId: string): Promise<SecretDelivery> {
   const tenantId = actor.tenantId;
   if (!tenantId) return { secrets: [], expiresInSeconds: 0 };
   const d = await db();
   const rows = await d.q<{ key: string; ciphertext: string }>("SELECT key, ciphertext FROM tenant_secrets WHERE tenant_id = $1 AND $2 = ANY(roles) ORDER BY key", [tenantId, actor.hubRole]);
+  const gateway = secretDeliveryMode() === "gateway";
+  const have = new Set(rows.map((r) => r.key));
   const secrets: DeliveredSecret[] = [];
   for (const r of rows) {
     if (!orgSecretKey(r.key)) continue;
+    if (gateway && GATEWAY_WITHHELD_SECRETS.includes(r.key)) continue;
     try {
       secrets.push({ env: r.key, value: decryptSecret(r.ciphertext, `${tenantId}|${r.key}`) });
     } catch {
@@ -213,7 +232,11 @@ export async function deliverSecrets(actor: Actor, deviceId: string): Promise<{ 
       });
     }
   }
-  return { secrets, expiresInSeconds: 3600 };
+  return {
+    secrets,
+    ...(gateway ? { llmGateway: { path: GATEWAY_PATH, providers: LLM_PROVIDERS.filter((p) => have.has(PROVIDER_SECRET[p])) } } : {}),
+    expiresInSeconds: 3600,
+  };
 }
 
 export { ORG_CONFIG_KEYS };

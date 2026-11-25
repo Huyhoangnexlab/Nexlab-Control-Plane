@@ -290,4 +290,26 @@ CREATE INDEX access_requests_user_idx ON access_requests (user_id, status);
 ALTER TABLE catalog_apps ADD COLUMN sop_scope jsonb;
 `,
   },
+  {
+    version: 8,
+    name: "cong-llm-luong-dung",
+    sql: `
+-- Lượng dùng mô hình qua cổng LLM (POST /v1/llm/…): mỗi dòng là tổng của MỘT người trong MỘT ngày cho một (nhà cung cấp, model).
+-- Dùng để áp hạn mức theo ngày và làm nền cho báo cáo / tính tiền. Chỉ số liệu — không có nội dung yêu cầu hay câu trả lời.
+CREATE TABLE llm_usage (
+  tenant_id     text NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id       text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day           date NOT NULL DEFAULT current_date,
+  provider      text NOT NULL,
+  model         text NOT NULL DEFAULT '',
+  requests      integer NOT NULL DEFAULT 0,
+  errors        integer NOT NULL DEFAULT 0,
+  input_tokens  bigint NOT NULL DEFAULT 0,
+  output_tokens bigint NOT NULL DEFAULT 0,
+  updated_at    timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (tenant_id, user_id, day, provider, model)
+);
+CREATE INDEX llm_usage_tenant_day_idx ON llm_usage (tenant_id, day);
+`,
+  },
 ];

@@ -156,6 +156,26 @@ else /* r.payload đã tin cậy: áp quyền */;
 - Gói quyền có thêm `payload.config`: `{ "<BIẾN>": { "value": "…", "locked": true|false } }` — cấu hình KHÔNG bí mật đã ghép tổ chức → phòng ban cho đúng người (được ký cùng gói). Chi tiết: [10](10-cau-hinh-va-bi-mat.md).
 - `GET /v1/secrets` (Bearer + `X-Device-Id`, như `/v1/entitlements`; 30 lần/phút/IP) → `{ "secrets": [{ "env", "value" }], "expiresInSeconds": 3600 }`: khoá API / token của tổ chức dành cho **vai Hub của người gọi** (giải mã tại server, trả qua HTTPS). Hub giữ trong RAM, không ghi đĩa. Bí mật **không** nằm trong gói quyền vì gói chỉ ký, không mã hoá. 401 thiếu / sai token; 403 người / thiết bị bị thu hồi.
 
+## 8.6b2 Cổng LLM (25/11): `POST /v1/llm/{provider}/{path}`
+
+Từ 25/11, khoá của các nhà cung cấp mô hình **không còn giao cho Hub**. `GET /v1/secrets` trả thêm `llmGateway: { "path": "/v1/llm", "providers": [...] }` (chỉ tên nhà cung cấp mà vai của người gọi được dùng) và `secrets` chỉ còn các bí mật chưa có đường qua server (hiện là `NOTION_TOKEN`). Đặt `CP_SECRET_DELIVERY=legacy` để giữ hành vi cũ cho bản Hub chưa biết cổng.
+
+- `POST /v1/llm/{provider}/{path}` (Bearer + `X-Device-Id`): máy chủ gắn khoá của tổ chức rồi chuyển tiếp; trả nguyên mã và thân của nhà cung cấp (kể cả luồng SSE).
+- Đường được chuyển (mọi đường khác → 404, không chạm mạng):
+
+| `provider` | `path` | Chuyển tới |
+|---|---|---|
+| `vertex` | `publishers/google/models/<model>:generateContent` · `:streamGenerateContent?alt=sse` · `:countTokens` | Vertex AI `v1beta1`, **project + vùng lấy từ cấu hình tổ chức** (`GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`; thiếu thì project của service account, vùng `global`), xác thực bằng access token của service account |
+| `gemini` | `v1beta/models/<model>:…` (cùng ba phương thức) | Gemini API với `x-goog-api-key` |
+| `typesafe` | `systemone` | `api.typesafe.ai/v1/systemone` |
+| `openrouter` | `systemone` | `openrouter.ai/api/v1/systemone` |
+
+- Kiểm mỗi lần gọi: token → người + tổ chức còn hoạt động + thiết bị chưa thu hồi (nhớ tối đa 30 giây); vai của người nằm trong danh sách vai của khoá; model khớp `CP_LLM_MODEL_ALLOW` (mẫu glob, mặc định `gemini-*`); thân ≤ 20 MB.
+- Hạn mức: 300 lần/phút mỗi người; `CP_LLM_USER_DAILY_REQUESTS` (mặc định 3000) và `CP_LLM_TENANT_DAILY_REQUESTS` (mặc định 100000) lần gọi mỗi ngày.
+- Lỗi của chính cổng: `{ "error": { "code": <mã HTTP>, "message", "status" } }` kèm header `X-Nexlab-Gateway-Error: 1` (401 token, 403 vai / model, 404 đường, 413 quá lớn, 429 hạn mức, 502 / 504 nhà cung cấp). Lỗi của nhà cung cấp được trả nguyên, không có header đó.
+- Lượng dùng ghi ở bảng `llm_usage` (migration 8): tổ chức, người, ngày, nhà cung cấp, model → số lần gọi, số lỗi, token vào / ra. **Không** ghi nội dung yêu cầu hay câu trả lời.
+- Mã: `src/lib/llm-gateway.ts` (luật đường, thuần), `src/server/services/llm-gateway.ts`, `src/server/google-sa-token.ts`; test `test/llm-gateway.test.ts`.
+
 ## 8.6c «Xin quyền» (31/10): `GET /v1/catalog`, `POST /v1/access-requests`
 
 Cùng cách xác thực như `/v1/entitlements` (Bearer + `X-Device-Id`). `GET /v1/catalog` → `{ "apps": [{ "id", "name" }] }` — tên các app đang bật trong danh mục của tổ chức (không địa chỉ) để chọn khi xin. `POST /v1/access-requests` `{ "appId"?, "message" }` → `201 { "id" }`. **Không tự cấp quyền**: chỉ tạo yêu cầu cho quản trị tổ chức / trưởng phòng của người xin (trang **Yêu cầu quyền**, nút «Đã cấp» / «Từ chối», có audit). Giới hạn: tối đa 5 yêu cầu chờ mỗi người, không xin lặp cùng app khi đang chờ, lý do ≤ 500 ký tự.

@@ -43,7 +43,11 @@ Giao diện Hub: mục bị khoá hiện «Do tổ chức đặt · khoá», m�
 
 ## 10.5 Giới hạn trung thực
 
-1. **Khoá nằm trong RAM của Hub trên máy nhân viên.** Người có quyền quản trị hệ điều hành, hoặc gỡ lỗi tiến trình, vẫn lấy ra được. Chỉ cấp cho vai cần, dùng khoá có hạn mức chi tiêu, đổi khoá khi có người nghỉ việc. Cách an toàn hơn (chưa làm): **cổng LLM phía server** — khoá thật chỉ ở server, Hub gọi qua token ngắn hạn của từng người.
+1. **Khoá mô hình không còn rời server (từ 25/11).** Gemini, service account Vertex, TypeSafe, OpenRouter đi qua **cổng LLM** (`POST /v1/llm/…`, xem [08 · 8.6b2](08-api-cho-hub.md)): Hub chỉ nhận tên nhà cung cấp, máy chủ gắn khoá, áp hạn mức và ghi lượng dùng. Còn lại:
+   - **Token Notion vẫn giao bản rõ** và nằm trong RAM của Hub (Notion MCP chạy trên máy người dùng). Người có quyền quản trị hệ điều hành vẫn lấy ra được.
+   - Khoá **Anthropic / OpenAI** không được giao và chưa có đường qua cổng — tạm không dùng được ở chế độ này.
+   - Nhân viên vẫn tự gọi được cổng bằng token đăng nhập của mình, nhưng chỉ đúng các đường đã khai, trong hạn mức, có dấu vết ở `llm_usage`, và mất ngay khi bị thu hồi.
+   - `CP_SECRET_DELIVERY=legacy` quay về giao khoá bản rõ (chỉ để chạy bản Hub cũ).
 2. Khởi động **ngoại tuyến** không có khoá tổ chức (khoá không lưu đĩa); agent dùng khoá của máy (nếu có) cho tới khi online.
 3. `CP_SECRETS_KEY` (32 byte base64) **bắt buộc ở production**, tách khỏi khoá ký gói quyền. Mất khoá này = không giải mã được các khoá đã lưu (phải nhập lại); đổi khoá = nhập lại. Chưa có xoay khoá tự động.
 4. Cấu hình theo phòng chỉ **quản trị tổ chức** đặt (trưởng phòng chưa được).
