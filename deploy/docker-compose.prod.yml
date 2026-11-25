@@ -24,6 +24,9 @@ services:
       CP_SECRETS_KEY: ${CP_SECRETS_KEY}            # khoá mã hoá khoá API / token của tổ chức (32 byte base64)
       CP_AUTO_SEED: "1"            # server DEMO: nạp dữ liệu mẫu khi DB trống (mật khẩu mẫu = CP_SEED_PASSWORD ngẫu nhiên)
       CP_SEED_PASSWORD: ${CP_SEED_PASSWORD}
+      # Cách giao khoá mô hình cho Hub: gateway (mặc định) = Hub gọi model QUA cổng /v1/llm, không nhận khoá thô;
+      # legacy = giao khoá bản rõ như trước 25/11 (chỉ để bản Hub cũ còn chạy). Cổng /v1/llm mở ở cả hai chế độ.
+      CP_SECRET_DELIVERY: ${CP_SECRET_DELIVERY:-gateway}
       KEYCLOAK_URL: https://${KC_HOST}
     depends_on:
       postgres: { condition: service_healthy }
