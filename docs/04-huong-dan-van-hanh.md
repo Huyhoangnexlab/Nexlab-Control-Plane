@@ -47,6 +47,11 @@ Trang **Tổng quan → Việc cần chú ý** nhắc các thiếu sót: phòng 
 ### Danh mục app
 - **Thêm app:** *Tên*, *Địa chỉ (origin)*, biểu tượng, màu, *Mức tối đa cho phép* (trần), thẻ.
   - Địa chỉ chỉ nhận **HTTPS**; path / query bị bỏ; không IP, không `.local`. Hub so khớp địa chỉ này **chính xác**, nên `https://crm.vn` và `https://app.crm.vn` là **hai app khác nhau**.
+  - **App mạng nội bộ (từ 25/11).** Tổ chức có app chỉ chạy trong mạng riêng (HIS, ERP nội bộ) thì nhờ **quản trị nền tảng Nexlab** bật «Cho phép app mạng nội bộ» ở trang *Tổ chức* (quản trị tổ chức không tự bật được). Sau đó danh mục nhận thêm: IP riêng (`10.x`, `172.16–31.x`, `192.168.x`, `100.64–127.x`), tên miền `.local` / `.internal` / `.lan` / `.home` / `.corp`, và tên máy một nhãn (`his-server`) — **cả `http` lẫn `https`**. Hub của nhân viên mở đúng địa chỉ đã ghi trong gói quyền (đã ký).
+    - Không bao giờ nhận, kể cả khi đã bật: `localhost` / `127.x`, dải `169.254.x.x` (gồm địa chỉ metadata của cloud), `0.0.0.0`, IP công khai viết bằng số, IPv6 viết bằng số. Bản Hub đóng gói cũng tự từ chối các địa chỉ này nếu chúng xuất hiện trong gói quyền.
+    - App `http` trong mạng nội bộ đi **không mã hoá**: ai nghe được mạng đó thì đọc / sửa được nội dung trang. Đây là quyết định của tổ chức về mạng của họ.
+    - **Tắt** cờ là thu hẹp ngay: mọi app mạng nội bộ đang có trong danh mục bị chuyển sang *tắt* (cấu hình cấp quyền được giữ), nhân viên mất app ở lần làm mới gói quyền kế tiếp.
+    - App do **người dùng tự thêm trong Hub** vẫn bị chặn địa chỉ mạng nội bộ như trước — chỉ danh mục của tổ chức mới khai được.
   - **Trần** là mức cao nhất bất kỳ phòng nào được cấp cho app này. Chọn thấp nếu app nhạy cảm (vd. nhân sự: trần `M1`).
 - **Sửa app:** hạ trần sẽ **tự hạ** mức đã cấp của các phòng xuống bằng trần mới (hệ thống báo số phòng bị ảnh hưởng và ghi nhật ký).
 - **Tắt app** (trạng thái *Tắt*): không phòng nào thấy, **cấu hình cấp quyền được giữ** — bật lại là có lại. Dùng khi tạm ngưng.

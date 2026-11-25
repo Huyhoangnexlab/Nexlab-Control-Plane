@@ -312,4 +312,13 @@ CREATE TABLE llm_usage (
 CREATE INDEX llm_usage_tenant_day_idx ON llm_usage (tenant_id, day);
 `,
   },
+  {
+    version: 9,
+    name: "app-mang-noi-bo",
+    sql: `
+-- Tổ chức được phép khai app ở địa chỉ MẠNG NỘI BỘ (IP riêng, .local, tên máy một nhãn) trong danh mục. Mặc định tắt; chỉ quản trị
+-- NỀN TẢNG bật (tin một tổ chức trỏ Hub của nhân viên vào mạng nội bộ là quyết định của Nexlab với tổ chức đó, không phải của tổ chức).
+ALTER TABLE tenants ADD COLUMN allow_private_apps boolean NOT NULL DEFAULT false;
+`,
+  },
 ];

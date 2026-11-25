@@ -10,7 +10,9 @@ export async function saveTenantAction(_prev: ActionResult, formData: FormData):
     const actor = await requireActor();
     const id = String(formData.get("id") ?? "");
     if (id) {
-      await updateTenant(actor, id, { name: String(formData.get("name") ?? ""), status: String(formData.get("status") ?? "active") });
+      // Ô tích «app mạng nội bộ» chỉ có trong form Sửa: có trường đánh dấu `hasPrivateApps` thì đọc ô tích (bỏ tích = tắt); không có thì giữ nguyên.
+      const allowPrivateApps = formData.has("hasPrivateApps") ? formData.get("allowPrivateApps") === "on" : undefined;
+      await updateTenant(actor, id, { name: String(formData.get("name") ?? ""), status: String(formData.get("status") ?? "active"), ...(allowPrivateApps !== undefined ? { allowPrivateApps } : {}) });
       return { message: "Đã cập nhật tổ chức." };
     }
     const r = await createTenant(actor, {

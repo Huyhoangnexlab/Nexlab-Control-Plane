@@ -53,16 +53,22 @@ const appSchema = z.object({
   status: z.enum(["active", "disabled"]).default("active"),
 });
 
-function parseApp(input: unknown) {
+/** `allowPrivate` = cờ «cho phép app mạng nội bộ» của TỔ CHỨC (chỉ quản trị nền tảng bật) — đọc từ DB, không từ form. */
+function parseApp(input: unknown, allowPrivate: boolean) {
   const v = parseInput(appSchema, input);
-  const o = normalizeOrigin(v.origin, { allowDev: allowDev() });
+  const o = normalizeOrigin(v.origin, { allowDev: allowDev(), allowPrivate });
   if (!o.ok) throw invalid(o.error, { origin: o.error });
-  return { ...v, origin: o.origin, maxLevel: v.maxLevel as Level };
+  return { ...v, origin: o.origin, maxLevel: v.maxLevel as Level, privateNetwork: o.privateNetwork };
+}
+
+async function tenantAllowsPrivate(tenantId: string): Promise<boolean> {
+  const r = await (await db()).one<{ allow_private_apps: boolean }>("SELECT allow_private_apps FROM tenants WHERE id = $1", [tenantId]);
+  return r?.allow_private_apps === true;
 }
 
 export async function createApp(actor: Actor, input: unknown): Promise<string> {
   const tenantId = requireTenantAdmin(actor);
-  const v = parseApp(input);
+  const { privateNetwork, ...v } = parseApp(input, await tenantAllowsPrivate(tenantId));
   const id = newId("app");
   await tx(async (t) => {
     if (await t.one("SELECT 1 FROM catalog_apps WHERE tenant_id = $1 AND origin = $2", [tenantId, v.origin])) throw conflict("Địa chỉ này đã có trong danh mục.");
@@ -71,7 +77,7 @@ export async function createApp(actor: Actor, input: unknown): Promise<string> {
       [id, tenantId, v.name, v.origin, v.icon, v.color, v.tags, v.maxLevel, v.status],
     );
     await bumpPolicy(t, tenantId);
-    await writeAudit(t, actor, { tenantId, action: "app.create", targetType: "app", targetId: id, summary: `Thêm app «${v.name}» (${v.origin}) vào danh mục, trần ${v.maxLevel}`, after: v });
+    await writeAudit(t, actor, { tenantId, action: "app.create", targetType: "app", targetId: id, summary: `Thêm app «${v.name}» (${v.origin}${privateNetwork ? " — mạng nội bộ" : ""}) vào danh mục, trần ${v.maxLevel}`, after: { ...v, privateNetwork } });
   });
   return id;
 }
@@ -82,7 +88,7 @@ export async function createApp(actor: Actor, input: unknown): Promise<string> {
  */
 export async function updateApp(actor: Actor, id: string, input: unknown): Promise<{ clamped: number }> {
   const tenantId = requireTenantAdmin(actor);
-  const v = parseApp(input);
+  const { privateNetwork: _private, ...v } = parseApp(input, await tenantAllowsPrivate(tenantId));
   return tx(async (t) => {
     const cur = await t.one<Raw>(`${SELECT} WHERE a.id = $1 AND a.tenant_id = $2 FOR UPDATE OF a`, [id, tenantId]);
     if (!cur) throw notFound("Không tìm thấy app.");

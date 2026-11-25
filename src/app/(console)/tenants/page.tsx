@@ -83,6 +83,8 @@ export default async function TenantsPage() {
                           <input type="hidden" name="id" value={t.id} />
                           <TextField label="Tên tổ chức" name="name" defaultValue={t.name} required />
                           <SelectField label="Trạng thái" name="status" defaultValue={t.status} options={[{ value: "active", label: "Hoạt động" }, { value: "suspended", label: "Tạm ngưng — mọi người bị đăng xuất, không đăng nhập được" }]} />
+                          <input type="hidden" name="hasPrivateApps" value="1" />
+                          <CheckField label="Cho phép app mạng nội bộ" name="allowPrivateApps" defaultChecked={t.allowPrivateApps} hint="Quản trị tổ chức được khai app ở IP riêng (10.x, 172.16–31.x, 192.168.x), tên miền .local / .internal hoặc tên máy nội bộ, kể cả http. Hub của nhân viên sẽ mở đúng các địa chỉ đó. Bỏ tích = tắt ngay mọi app mạng nội bộ đang có trong danh mục." />
                         </FormDialog>
                         <FormDialog title="Xoá tổ chức?" description={`Xoá vĩnh viễn «${t.name}» cùng ${t.users} người dùng, ${t.departments} phòng ban, ${t.apps} app. Nhật ký xoá vẫn được giữ.`} action={deleteTenantAction} submitLabel="Xoá vĩnh viễn" submitVariant="danger" size="sm" trigger={<TriggerButton variant="ghost" size="sm" title="Xoá" className="hover:bg-rose-50 hover:text-rose-600"><Trash2 className="size-4" /></TriggerButton>}>
                           <input type="hidden" name="id" value={t.id} />

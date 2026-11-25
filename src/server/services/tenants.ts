@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { db, tx } from "../db";
 import { requirePlatform, requireTenantAdmin, type Actor } from "../actor";
-import { writeAudit } from "../audit";
+import { bumpPolicy, writeAudit } from "../audit";
 import { conflict, invalid, notFound } from "../errors";
 import { newId, newTempPassword } from "../ids";
 import { hashPassword } from "../password";
 import { parseInput } from "../validate";
 import { colorSchema, domainSchema, emailSchema, nameSchema, passwordSchema, slugSchema } from "@/lib/validators";
+import { isPrivateNetworkOrigin } from "@/lib/origin";
 
 export interface TenantRow {
   id: string;
@@ -19,6 +20,8 @@ export interface TenantRow {
   productName: string | null;
   accent: string | null;
   createdAt: string;
+  /** Tổ chức được khai app ở địa chỉ mạng nội bộ trong danh mục (chỉ quản trị nền tảng bật). */
+  allowPrivateApps: boolean;
   users: number;
   departments: number;
   apps: number;
@@ -27,14 +30,14 @@ export interface TenantRow {
 
 type Raw = {
   id: string; name: string; slug: string; domain: string; status: "active" | "suspended"; policy_version: number;
-  entitlement_ttl_hours: number; product_name: string | null; accent: string | null; created_at: string;
+  entitlement_ttl_hours: number; product_name: string | null; accent: string | null; created_at: string; allow_private_apps: boolean;
   users: number; departments: number; apps: number;
   sso_issuer: string | null; sso_client: string | null; sso_claim: string | null; sso_sync: boolean | null; sso_jit: boolean | null;
 };
 
 const map = (r: Raw): TenantRow => ({
   id: r.id, name: r.name, slug: r.slug, domain: r.domain, status: r.status, policyVersion: r.policy_version,
-  entitlementTtlHours: r.entitlement_ttl_hours, productName: r.product_name, accent: r.accent, createdAt: r.created_at,
+  entitlementTtlHours: r.entitlement_ttl_hours, productName: r.product_name, accent: r.accent, createdAt: r.created_at, allowPrivateApps: r.allow_private_apps === true,
   users: r.users, departments: r.departments, apps: r.apps,
   sso: r.sso_issuer ? { issuer: r.sso_issuer, clientId: r.sso_client ?? "", groupsClaim: r.sso_claim ?? "groups", syncGroups: !!r.sso_sync, jit: !!r.sso_jit } : null,
 });
@@ -92,16 +95,40 @@ export async function createTenant(actor: Actor, input: unknown): Promise<{ tena
   return { tenant: map(created!), tempPassword: explicit ? null : password };
 }
 
-const platformUpdateSchema = z.object({ name: nameSchema("Tên tổ chức"), status: z.enum(["active", "suspended"]) });
+const platformUpdateSchema = z.object({
+  name: nameSchema("Tên tổ chức"),
+  status: z.enum(["active", "suspended"]),
+  /** Bỏ trống = giữ nguyên (form cũ / lời gọi không nói tới cờ này). */
+  allowPrivateApps: z.boolean().optional(),
+});
 
 /** Quản trị nền tảng đổi tên / tạm ngưng tổ chức. Tạm ngưng = mọi người của tenant bị đá khỏi phiên. */
 export async function updateTenant(actor: Actor, id: string, input: unknown): Promise<void> {
   requirePlatform(actor);
   const v = parseInput(platformUpdateSchema, input);
   await tx(async (t) => {
-    const cur = await t.one<{ name: string; status: string }>("SELECT name, status FROM tenants WHERE id = $1 FOR UPDATE", [id]);
+    const cur = await t.one<{ name: string; status: string; allow_private_apps: boolean }>("SELECT name, status, allow_private_apps FROM tenants WHERE id = $1 FOR UPDATE", [id]);
     if (!cur) throw notFound("Không tìm thấy tổ chức.");
-    await t.q("UPDATE tenants SET name = $2, status = $3 WHERE id = $1", [id, v.name, v.status]);
+    const allowPrivate = v.allowPrivateApps ?? cur.allow_private_apps;
+    await t.q("UPDATE tenants SET name = $2, status = $3, allow_private_apps = $4 WHERE id = $1", [id, v.name, v.status, allowPrivate]);
+    if (allowPrivate !== cur.allow_private_apps) {
+      // TẮT cờ là thu hẹp: app mạng nội bộ đang có trong danh mục bị TẮT ngay (không xoá — cấu hình cấp quyền được giữ), gói quyền đổi phiên bản.
+      let disabled: string[] = [];
+      if (!allowPrivate) {
+        const apps = await t.q<{ id: string; name: string; origin: string }>("SELECT id, name, origin FROM catalog_apps WHERE tenant_id = $1 AND status = 'active'", [id]);
+        const priv = apps.filter((a) => isPrivateNetworkOrigin(a.origin));
+        if (priv.length > 0) {
+          await t.q("UPDATE catalog_apps SET status = 'disabled' WHERE id = ANY($1::text[])", [priv.map((a) => a.id)]);
+          await bumpPolicy(t, id);
+          disabled = priv.map((a) => a.name);
+        }
+      }
+      await writeAudit(t, actor, {
+        tenantId: id, action: "tenant.private_apps", targetType: "tenant", targetId: id,
+        summary: allowPrivate ? `Cho phép tổ chức «${v.name}» khai app ở địa chỉ mạng nội bộ` : `Thôi cho phép app mạng nội bộ ở «${v.name}»${disabled.length ? ` — đã tắt ${disabled.length} app: ${disabled.join(", ")}` : ""}`,
+        before: { allowPrivateApps: cur.allow_private_apps }, after: { allowPrivateApps: allowPrivate, ...(disabled.length ? { disabledApps: disabled } : {}) },
+      });
+    }
     if (v.status === "suspended") await t.q("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE tenant_id = $1)", [id]);
     await writeAudit(t, actor, { tenantId: id, action: "tenant.update", targetType: "tenant", targetId: id, summary: `Cập nhật tổ chức «${v.name}» (${v.status === "active" ? "hoạt động" : "tạm ngưng"})`, before: cur, after: v });
   });
